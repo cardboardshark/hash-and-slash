@@ -1,0 +1,9 @@
+/node_modules
+
+.DS_Store
+.env
+
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
