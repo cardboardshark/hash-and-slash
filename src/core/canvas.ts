@@ -1,7 +1,6 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
+import type { CanvasBuffer } from "@/core/primitives/canvas-buffer";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { SpriteCollection } from "@/core/primitives/sprite-collection";
-import type { SpriteLike } from "@/core/types";
 
 type CanvasConfig = {
     width: number;
@@ -24,14 +23,11 @@ export class Canvas {
         return this.#config.height;
     }
 
-    draw(spritesOrSpriteCollection: SpriteLike[] | SpriteCollection) {
-        const sprites = spritesOrSpriteCollection instanceof SpriteCollection ? spritesOrSpriteCollection.sprites : spritesOrSpriteCollection;
-
+    draw(buffer: CanvasBuffer) {
         const pixels = new Array(this.#config.height).fill(null).map(() => new Array(this.#config.width).fill(this.#config.fill ?? " "));
 
         const screenRect = new Rectangle({ x: 0, y: 0 }, { x: this.#config.width, y: this.#config.height });
-
-        sprites.forEach((sprite) => {
+        buffer.sprites.forEach((sprite) => {
             const spriteRows = typeof sprite.content === "string" ? sprite.content.split("\n") : [sprite.content];
 
             spriteRows.forEach((row, rowIndex) => {

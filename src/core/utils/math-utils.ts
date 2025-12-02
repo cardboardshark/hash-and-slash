@@ -1,5 +1,5 @@
 import { Point } from "@/core/primitives/point";
-import type { PointLike } from "@/core/types";
+import type { BoundingBox, PointLike } from "@/core/types";
 
 export function lerp(start: number, end: number, t: number) {
     return start * (1.0 - t) + t * end;
@@ -18,4 +18,33 @@ export function lerpPoint(p0: PointLike, p1: PointLike, t: number) {
     const roundedLerpedX = Math.round(lerpedX);
     const roundedLerpedY = Math.round(lerpedY);
     return new Point(roundedLerpedX, roundedLerpedY);
+}
+
+export function calculateBoundingBox(points: PointLike[]): BoundingBox {
+    const dimensions = points.reduce<BoundingBox>((acc, point) => {
+        acc.left ??= point.x;
+        acc.right ??= point.x;
+        acc.top ??= point.y;
+        acc.bottom ??= point.y;
+
+        if (point.x < acc.left) {
+            acc.left = point.x;
+        }
+        if (point.x > acc.right) {
+            acc.right = point.x;
+        }
+        if (point.y < acc.top) {
+            acc.top = point.y;
+        }
+        if (point.y > acc.bottom) {
+            acc.bottom = point.y;
+        }
+        return acc;
+    }, {} as BoundingBox);
+
+    return {
+        ...dimensions,
+        width: dimensions.right - dimensions.left,
+        height: dimensions.bottom - dimensions.top,
+    };
 }

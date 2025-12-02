@@ -1,16 +1,43 @@
-import type { PolygonLike, PointLike, PaintOptions } from "@/core/types";
+import { type PolygonLike, type PointLike, type PaintOptions, isPolygonLike, type Shape } from "@/core/types";
 import { Line } from "./line";
-import type { Sprite } from "./sprite";
+import { Sprite } from "./sprite";
+import { Point } from "@/core/primitives/point";
+import { Paint } from "@/core/paint";
+import { calculateBoundingBox } from "@/core/utils/math-utils";
 
-export class Polygon implements PolygonLike {
-    points;
-    lines;
+export class Polygon implements Shape, PolygonLike {
+    points: PointLike[];
+    lines: Line[];
 
-    constructor(points: PointLike[] = []) {
-        this.points = points;
+    constructor(shape: PolygonLike);
+    constructor(points: PointLike[]);
+    constructor(shapeOrPoints: PolygonLike | PointLike[] = []) {
+        if (isPolygonLike(shapeOrPoints)) {
+            this.points = shapeOrPoints.points;
+        } else {
+            this.points = shapeOrPoints;
+        }
+
         this.lines = [];
-        for (let i = 0; i <= points.length; i += 1) {
-            const nextPoint = points.at(i + 1);
+        this.#calculateLines();
+    }
+
+    get isClosed() {
+        if (this.points.length <= 1) {
+            return false;
+        }
+        const firstPoint = this.points.at(0);
+        if (!firstPoint) {
+            return false;
+        }
+
+        return new Point(firstPoint).equals(this.last);
+    }
+
+    #calculateLines() {
+        this.lines = [];
+        for (let i = 0; i <= this.points.length; i += 1) {
+            const nextPoint = this.points.at(i + 1);
             if (nextPoint) {
                 this.lines.push(new Line(this.points[i], nextPoint));
             }
@@ -22,6 +49,7 @@ export class Polygon implements PolygonLike {
             this.lines.push(new Line(this.last, point));
         }
         this.points.push(point);
+        this.#calculateLines();
     }
 
     strokeContains(point: PointLike) {
@@ -35,7 +63,19 @@ export class Polygon implements PolygonLike {
         return this.points[this.points.length - 1];
     }
 
-    toSprite(options: PaintOptions = { fill: " ", stroke: " " }): Sprite[] {
-        return this.lines.flatMap((l) => l.toSprite(options.stroke));
+    toPoints() {
+        return this.points;
+    }
+
+    toSprite(options: PaintOptions = { fill: "p", stroke: "P" }) {
+        if (this.isClosed) {
+            const dimensions = calculateBoundingBox(this.points);
+            const output = Paint.polygon(this.points, {
+                fill: options.fill ?? "p",
+                stroke: options.stroke ?? "P",
+            });
+            return new Sprite(new Point(dimensions.left, dimensions.top), output);
+        }
+        return this.lines.flatMap((l) => l.toSprite(options));
     }
 }

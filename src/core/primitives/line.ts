@@ -1,10 +1,20 @@
-import { type LineLike, type PointLike, isLineLike, type Shape, isPolygonLike, isRectangleLike, isPointLike, type IntersectionResult } from "@/core/types";
+import {
+    type LineLike,
+    type PointLike,
+    isLineLike,
+    type ShapeLike,
+    isPolygonLike,
+    isRectangleLike,
+    type IntersectionResult,
+    type PaintOptions,
+    type Shape,
+} from "@/core/types";
 import { getLineIntersection } from "../utils/collision-util";
 import { calculateDiagonalDistance, lerpPoint } from "../utils/math-utils";
 import { Point } from "./point";
 import { Sprite } from "./sprite";
 
-export class Line implements LineLike {
+export class Line implements Shape, LineLike {
     start;
     end;
     length;
@@ -43,11 +53,11 @@ export class Line implements LineLike {
         return points;
     }
 
-    intersects(shape: Shape): boolean {
+    intersects(shape: ShapeLike): boolean {
         return this.getIntersection(shape) !== false;
     }
 
-    getIntersection(shape: Shape): IntersectionResult | false {
+    getIntersection(shape: ShapeLike): IntersectionResult | false {
         if (isPolygonLike(shape)) {
             return shape.lines.reduce<IntersectionResult | false>((acc, l) => {
                 if (acc) {
@@ -80,9 +90,9 @@ export class Line implements LineLike {
         return false;
     }
 
-    toSprite(fill = "◆"): Sprite[] {
+    toSprite(paint: PaintOptions = { stroke: "l" }): Sprite[] {
         return this.toPoints().map((point) => {
-            return new Sprite(point, fill);
+            return new Sprite(point, paint.stroke ?? "◆");
         });
     }
 

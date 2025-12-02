@@ -1,24 +1,39 @@
-import type { PaintOptions, PointLike, RectangleLike, SpriteLike } from "@/core/types";
+import { isRectangleLike, type PaintOptions, type PointLike, type RectangleLike, type Shape, type SpriteLike } from "@/core/types";
 import { Line } from "./line";
 import { Sprite } from "./sprite";
 
-export class Rectangle implements RectangleLike {
+export class Rectangle implements Shape, RectangleLike {
     topLeft;
     bottomRight;
+    width;
+    height;
     lines;
 
-    constructor(p0: PointLike, p1: PointLike) {
-        this.topLeft = p0;
-        this.bottomRight = p1;
+    constructor(p0: RectangleLike);
+    constructor(p0: PointLike, p1: PointLike);
+    constructor(p0OrRectangleLike: PointLike | RectangleLike, p1?: PointLike) {
+        if (isRectangleLike(p0OrRectangleLike)) {
+            this.topLeft = p0OrRectangleLike.topLeft;
+            this.bottomRight = p0OrRectangleLike.bottomRight;
+        } else if (p1 !== undefined) {
+            this.topLeft = p0OrRectangleLike;
+            this.bottomRight = p1;
+        } else {
+            throw new Error("Invalid arguments passed to Rectangle");
+        }
+
+        this.width = this.bottomRight.x - this.topLeft.x;
+        this.height = this.bottomRight.y - this.topLeft.y;
+
         this.lines = [
             // top
-            new Line(p0, { x: p1.x, y: p0.y }),
+            new Line(this.topLeft, { x: this.bottomRight.x, y: this.topLeft.y }),
             // right
-            new Line({ x: p1.x, y: p0.y }, p1),
+            new Line({ x: this.bottomRight.x, y: this.topLeft.y }, this.bottomRight),
             // bottom
-            new Line({ x: p0.x, y: p1.y }, { x: p1.x, y: p1.y }),
+            new Line({ x: this.topLeft.x, y: this.bottomRight.y }, { x: this.bottomRight.x, y: this.bottomRight.y }),
             // left
-            new Line(p0, { x: p0.x, y: p1.y }),
+            new Line(this.topLeft, { x: this.topLeft.x, y: this.bottomRight.y }),
         ];
     }
 
@@ -28,7 +43,17 @@ export class Rectangle implements RectangleLike {
         return isInXRange && isInYRange;
     }
 
-    toSprite(options: PaintOptions): SpriteLike {
+    toPoints() {
+        const points = [];
+        for (let y = this.topLeft.y; y < this.bottomRight.y; y += 1) {
+            for (let x = this.topLeft.x; x < this.bottomRight.x; x += 1) {
+                points.push({ x, y });
+            }
+        }
+        return points;
+    }
+
+    toSprite(options: PaintOptions = { fill: "r", stroke: "R" }) {
         let output = "";
         for (let y = this.topLeft.y; y < this.bottomRight.y; y += 1) {
             let row = "";

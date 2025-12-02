@@ -1,6 +1,6 @@
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
-import { type PointLike, type Shape, type IntersectionResult, isPolygonLike, isRectangleLike } from "@/core/types";
+import { type PointLike, type ShapeLike, type IntersectionResult, isPolygonLike, isRectangleLike } from "@/core/types";
 import { getLineIntersection } from "@/core/utils/collision-util";
 
 export class Ray {
@@ -20,7 +20,7 @@ export class Ray {
         return this.line.toPoints().some((p) => p.equals(point));
     }
 
-    getIntersection(shape: Shape): IntersectionResult | false {
+    getIntersection(shape: ShapeLike): IntersectionResult | false {
         if (isPolygonLike(shape)) {
             return shape.lines.reduce<IntersectionResult | false>((acc, l) => {
                 if (acc) {

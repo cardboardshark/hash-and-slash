@@ -1,8 +1,9 @@
-import type { SpriteLike } from "@/core/types";
 import { Canvas } from "./canvas";
 import type { KeyboardController } from "./keyboard-controller";
 import { Point } from "./primitives/point";
 import { Sprite } from "./primitives/sprite";
+import { CanvasBuffer } from "@/core/primitives/canvas-buffer";
+import { Text } from "@/core/primitives/text";
 
 const canvas = new Canvas({
     width: 20,
@@ -12,21 +13,23 @@ const canvas = new Canvas({
 
 export function DisplayKeyboardInput(input: KeyboardController) {
     return () => {
-        const sprites = Object.entries(input.keys).reduce<SpriteLike[]>((acc, [key, state], index) => {
+        const buffer = new CanvasBuffer();
+
+        Object.entries(input.keys).forEach(([key, state], index) => {
             if (state.pressed) {
                 if (state.doubleTap) {
-                    acc.push(new Sprite(new Point(0, index), "██"));
+                    buffer.push(new Sprite(new Point(0, index), "██"));
                 } else {
-                    acc.push(new Sprite(new Point(0, index), "█"));
+                    buffer.push(new Sprite(new Point(0, index), "█"));
                 }
 
                 if (state.timestamp) {
-                    acc.push(new Sprite(new Point(8, index), `${Date.now() - state.timestamp}ms`.padStart(10, " ")));
+                    buffer.push(new Text(new Point(canvas.width - 1, index), `${Date.now() - state.timestamp}ms`, { align: "right" }));
                 }
             }
-            acc.push(new Sprite(new Point(3, index), key.toUpperCase()));
-            return acc;
-        }, []);
-        canvas.draw(sprites);
+            buffer.push(new Text(new Point(3, index), key.toUpperCase()));
+        });
+
+        canvas.draw(buffer);
     };
 }
