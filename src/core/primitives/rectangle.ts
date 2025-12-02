@@ -1,8 +1,9 @@
-import { isRectangleLike, type PaintOptions, type PointLike, type RectangleLike, type Shape, type SpriteLike } from "@/core/types";
+import { isRectangleLike, type BoundingBox, type PointLike, type RectangleLike } from "@/core/types";
 import { Line } from "./line";
-import { Sprite } from "./sprite";
+import { Shape } from "@/core/primitives/shape";
+import { calculateBoundingBox } from "@/core/utils/math-utils";
 
-export class Rectangle implements Shape, RectangleLike {
+export class Rectangle extends Shape implements RectangleLike {
     topLeft;
     bottomRight;
     width;
@@ -12,6 +13,7 @@ export class Rectangle implements Shape, RectangleLike {
     constructor(p0: RectangleLike);
     constructor(p0: PointLike, p1: PointLike);
     constructor(p0OrRectangleLike: PointLike | RectangleLike, p1?: PointLike) {
+        super();
         if (isRectangleLike(p0OrRectangleLike)) {
             this.topLeft = p0OrRectangleLike.topLeft;
             this.bottomRight = p0OrRectangleLike.bottomRight;
@@ -43,31 +45,7 @@ export class Rectangle implements Shape, RectangleLike {
         return isInXRange && isInYRange;
     }
 
-    toPoints() {
-        const points = [];
-        for (let y = this.topLeft.y; y < this.bottomRight.y; y += 1) {
-            for (let x = this.topLeft.x; x < this.bottomRight.x; x += 1) {
-                points.push({ x, y });
-            }
-        }
-        return points;
-    }
-
-    toSprite(options: PaintOptions = { fill: "r", stroke: "R" }) {
-        let output = "";
-        for (let y = this.topLeft.y; y < this.bottomRight.y; y += 1) {
-            let row = "";
-            for (let x = this.topLeft.x; x < this.bottomRight.x; x += 1) {
-                const isBorder = x === this.topLeft.x || x === this.bottomRight.x - 1 || y === this.topLeft.y || y === this.bottomRight.y - 1;
-                if (isBorder) {
-                    row += options.stroke ?? options.fill ?? " ";
-                } else {
-                    row += options.fill ?? " ";
-                }
-            }
-            output += `${row}\n`;
-        }
-
-        return new Sprite(this.topLeft, output);
+    static calculateBoundingBox(rectangle: RectangleLike): BoundingBox {
+        return calculateBoundingBox([rectangle.topLeft, rectangle.bottomRight]);
     }
 }

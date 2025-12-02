@@ -6,15 +6,15 @@ import {
     isPolygonLike,
     isRectangleLike,
     type IntersectionResult,
-    type PaintOptions,
-    type Shape,
+    isPointLike,
+    type BoundingBox,
 } from "@/core/types";
 import { getLineIntersection } from "../utils/collision-util";
-import { calculateDiagonalDistance, lerpPoint } from "../utils/math-utils";
 import { Point } from "./point";
-import { Sprite } from "./sprite";
+import { calculateBoundingBox, calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
+import { Shape } from "@/core/primitives/shape";
 
-export class Line implements Shape, LineLike {
+export class Line extends Shape implements LineLike {
     start;
     end;
     length;
@@ -23,6 +23,7 @@ export class Line implements Shape, LineLike {
     constructor(p0: PointLike, p1: PointLike);
     constructor(line: LineLike);
     constructor(p0: PointLike | LineLike, p1?: PointLike) {
+        super();
         if (isLineLike(p0)) {
             this.start = new Point(p0.start);
             this.end = new Point(p0.end);
@@ -39,25 +40,11 @@ export class Line implements Shape, LineLike {
         this.radian = Math.atan2(this.end.y - this.start.y, this.end.x - this.start.x);
     }
 
-    contains(point: PointLike) {
-        return this.toPoints().some((p) => p.equals(point));
-    }
-
-    toPoints() {
-        const points: Point[] = [];
-        const N = calculateDiagonalDistance(this.start, this.end);
-        for (let step = 0; step <= N; step++) {
-            let t = N === 0 ? 0.0 : step / N;
-            points.push(lerpPoint(this.start, this.end, t));
-        }
-        return points;
-    }
-
     intersects(shape: ShapeLike): boolean {
         return this.getIntersection(shape) !== false;
     }
 
-    getIntersection(shape: ShapeLike): IntersectionResult | false {
+    getIntersection(shape: ShapeLike | PointLike): IntersectionResult | false {
         if (isPolygonLike(shape)) {
             return shape.lines.reduce<IntersectionResult | false>((acc, l) => {
                 if (acc) {
@@ -82,6 +69,11 @@ export class Line implements Shape, LineLike {
                 return acc;
             }, false);
         }
+        if (isPointLike(shape)) {
+            const point = new Point(shape);
+            const hasIntersection = this.toPoints().some((p) => point.equals(p));
+            return hasIntersection ? { point: point } : false;
+        }
 
         const intersectionPoint = getLineIntersection(this, shape);
         if (intersectionPoint) {
@@ -90,10 +82,14 @@ export class Line implements Shape, LineLike {
         return false;
     }
 
-    toSprite(paint: PaintOptions = { stroke: "l" }): Sprite[] {
-        return this.toPoints().map((point) => {
-            return new Sprite(point, paint.stroke ?? "◆");
-        });
+    toPoints() {
+        const points: PointLike[] = [];
+        const N = calculateDiagonalDistance(this.start, this.end);
+        for (let step = 0; step <= N; step++) {
+            let t = N === 0 ? 0.0 : step / N;
+            points.push(lerpPoint(this.start, this.end, t));
+        }
+        return points;
     }
 
     rotate(radian: number) {
@@ -122,5 +118,9 @@ export class Line implements Shape, LineLike {
 
         // Return the unit normal vector
         return new Point(normalX / magnitude, normalY / magnitude);
+    }
+
+    static calculateBoundingBox(line: LineLike): BoundingBox {
+        return calculateBoundingBox([line.start, line.end]);
     }
 }

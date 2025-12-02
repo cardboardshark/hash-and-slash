@@ -1,19 +1,24 @@
 import type { Line } from "@/core/primitives/line";
 import type { Point } from "@/core/primitives/point";
-import type { Sprite } from "@/core/primitives/sprite";
 
-export interface Shape {
-    toPoints: () => PointLike[];
-    toSprite: (paint?: PaintOptions) => Sprite | Sprite[];
-}
-
+type Paintable = {
+    fill?: string;
+    stroke?: string;
+};
 export type SpriteLike = PointLike & { content: string | number };
 export type PointLike = { x: number; y: number };
-export type LineLike = { start: PointLike; end: PointLike };
-export type RectangleLike = { topLeft: PointLike; bottomRight: PointLike; lines: LineLike[] };
-export type PolygonLike = { points: PointLike[]; lines: LineLike[] };
-export type TextLike = PointLike & { text: string | number };
+export type LineLike = { start: PointLike; end: PointLike } & Paintable;
+export type RectangleLike = { topLeft: PointLike; bottomRight: PointLike; lines: LineLike[] } & Paintable;
+export type PolygonLike = { points: PointLike[]; lines: LineLike[] } & Paintable;
+export type TextLike = PointLike & { text: string | number; options?: TextOptions };
 export type ShapeLike = LineLike | RectangleLike | PolygonLike | TextLike;
+
+export interface TextOptions {
+    align?: "left" | "center" | "right";
+    width?: number;
+    maxLines?: number;
+    fill?: string;
+}
 
 export type PaintOptions =
     | {

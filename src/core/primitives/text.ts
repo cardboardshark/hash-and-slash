@@ -2,16 +2,9 @@ import { BLANK_CHARACTER } from "@/core/core-constants";
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Sprite } from "@/core/primitives/sprite";
-import type { PaintOptions, PointLike, Shape, TextLike } from "@/core/types";
+import type { BoundingBox, PointLike, TextLike, TextOptions } from "@/core/types";
 
-interface TextOptions {
-    align?: "left" | "center" | "right";
-    width?: number;
-    maxLines?: number;
-    fill?: string;
-}
-
-export class Text implements Shape, TextLike {
+export class Text implements TextLike {
     x;
     y;
     text;
@@ -36,13 +29,8 @@ export class Text implements Shape, TextLike {
         this.rectangle = new Rectangle(point, new Point(point).add(new Point(options.width ?? longestRow, options.maxLines ?? splitText.length)));
     }
 
-    toPoints() {
-        throw new Error("not yet implemented");
-        return [];
-    }
-
-    toSprite() {
-        const splitText = this.text.split("\n");
+    static calculateBoundingBox(text: TextLike): BoundingBox {
+        const splitText = String(text.text).split("\n");
         const longestRow = splitText.reduce((max, line) => {
             if (line.length > max) {
                 max = line.length;
@@ -50,35 +38,25 @@ export class Text implements Shape, TextLike {
             return max;
         }, 0);
 
-        const { width, align = "left", fill = BLANK_CHARACTER } = this.options;
+        const { width, align = "left" } = text.options ?? {};
         const numCharacters = width ?? longestRow;
 
-        return splitText.map((line, index) => {
-            let composedLine = line;
-            if (line.length < numCharacters) {
-                if (align === "left") {
-                    composedLine = line.padEnd(numCharacters, fill);
-                } else if (align === "center") {
-                    const halfDiff = Math.floor((numCharacters - line.length) / 2);
-                    composedLine = [new String().padStart(halfDiff, fill), line, new String().padEnd(halfDiff, fill)].join("");
-                    if (composedLine.length !== numCharacters) {
-                        composedLine.padEnd(numCharacters, fill);
-                    }
-                } else {
-                    composedLine = line.padStart(numCharacters, fill);
-                }
+        let xPos = text.x;
+        if (width === undefined && align !== undefined) {
+            if (align === "right") {
+                xPos -= numCharacters;
+            } else if (align === "center") {
+                xPos -= Math.floor(numCharacters / 2);
             }
+        }
 
-            let xPos = this.x;
-            if (width === undefined && align !== undefined) {
-                if (align === "right") {
-                    xPos -= numCharacters;
-                } else if (align === "center") {
-                    xPos -= Math.floor(numCharacters / 2);
-                }
-            }
-
-            return new Sprite(new Point(xPos, this.y + index), composedLine);
-        });
+        return {
+            left: xPos,
+            right: xPos + numCharacters,
+            top: text.y,
+            bottom: text.y + splitText.length,
+            width: numCharacters,
+            height: splitText.length,
+        };
     }
 }

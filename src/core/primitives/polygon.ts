@@ -1,17 +1,17 @@
-import { type PolygonLike, type PointLike, type PaintOptions, isPolygonLike, type Shape } from "@/core/types";
+import { type PolygonLike, type PointLike, isPolygonLike, type BoundingBox } from "@/core/types";
 import { Line } from "./line";
-import { Sprite } from "./sprite";
 import { Point } from "@/core/primitives/point";
-import { Paint } from "@/core/paint";
 import { calculateBoundingBox } from "@/core/utils/math-utils";
+import { Shape } from "@/core/primitives/shape";
 
-export class Polygon implements Shape, PolygonLike {
+export class Polygon extends Shape implements PolygonLike {
     points: PointLike[];
     lines: Line[];
 
     constructor(shape: PolygonLike);
     constructor(points: PointLike[]);
     constructor(shapeOrPoints: PolygonLike | PointLike[] = []) {
+        super();
         if (isPolygonLike(shapeOrPoints)) {
             this.points = shapeOrPoints.points;
         } else {
@@ -52,10 +52,6 @@ export class Polygon implements Shape, PolygonLike {
         this.#calculateLines();
     }
 
-    strokeContains(point: PointLike) {
-        return this.lines.some((l) => l.contains(point));
-    }
-
     get last() {
         if (this.points.length === 0) {
             throw new Error("Polygon does not have any points.");
@@ -63,19 +59,7 @@ export class Polygon implements Shape, PolygonLike {
         return this.points[this.points.length - 1];
     }
 
-    toPoints() {
-        return this.points;
-    }
-
-    toSprite(options: PaintOptions = { fill: "p", stroke: "P" }) {
-        if (this.isClosed) {
-            const dimensions = calculateBoundingBox(this.points);
-            const output = Paint.polygon(this.points, {
-                fill: options.fill ?? "p",
-                stroke: options.stroke ?? "P",
-            });
-            return new Sprite(new Point(dimensions.left, dimensions.top), output);
-        }
-        return this.lines.flatMap((l) => l.toSprite(options));
+    static calculateBoundingBox(polygon: PolygonLike): BoundingBox {
+        return calculateBoundingBox(polygon.points);
     }
 }

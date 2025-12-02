@@ -10,8 +10,7 @@ import { Rectangle } from "@/core/primitives/rectangle";
 import { Sprite } from "@/core/primitives/sprite";
 import { Text } from "@/core/primitives/text";
 import { Ticker } from "@/core/ticker";
-import type { PointLike } from "@/core/types";
-import { random, range } from "lodash";
+import { random } from "lodash";
 
 const config = {
     fps: 10,
@@ -38,7 +37,10 @@ interface GameState {
 }
 
 const liveArea = new Rectangle({ x: 1, y: 1 }, { x: config.canvas.width - 1, y: config.canvas.height - 3 });
+liveArea.fill = " ";
+
 const playerHistoryPath = new Polygon([playerPos]);
+playerHistoryPath.stroke = "-";
 
 const gameState: GameState = {
     apple: randomlyPlaceApple(liveArea, playerHistoryPath),
@@ -51,7 +53,7 @@ let rotation = 0;
 ticker.add((delta) => {
     const buffer = new CanvasBuffer();
 
-    buffer.push(liveArea, { fill: " " });
+    buffer.push(liveArea);
 
     // score
     buffer.push(
@@ -67,34 +69,39 @@ ticker.add((delta) => {
         playerHistoryPath.add(playerPos);
     }
 
-    if (playerHistoryPath.last) {
-        buffer.push(new Line(playerHistoryPath.last, playerPos), { stroke: "-" });
+    if (playerHistoryPath.last && new Point(playerHistoryPath.last).equals(playerPos) === false) {
+        const lastHistorySegment = new Line(playerHistoryPath.last, playerPos);
+        lastHistorySegment.stroke = "-";
+        buffer.push(lastHistorySegment);
     }
 
-    if (playerVector) {
+    if (playerVector.equals({ x: 0, y: 0 }) === false) {
         const playerVectorWithSpeed = new Point(playerVector).multiplyScalar(playerSpeed);
 
         const newPos = playerPos.add(playerVectorWithSpeed);
         const playerProjectedPath = new Line(playerPos, newPos);
+        playerProjectedPath.stroke = "=";
         if (playerProjectedPath.intersects(liveArea)) {
             console.log("OUT OF FBOUNDS");
         }
-        buffer.push(playerProjectedPath, { stroke: "=" });
+        buffer.push(playerProjectedPath);
 
         const outOfBounds = liveArea.contains(newPos) === false;
-        const hasCollission = playerHistoryPath.strokeContains(newPos);
+        // const hasCollission = playerHistoryPath.strokeContains(newPos);
+        const hasCollission = false;
         if (outOfBounds || hasCollission) {
             console.log("oh no");
         } else {
             playerPos = newPos;
         }
 
-        buffer.push(new Sprite(gameState.apple, "ó"));
-        if (playerProjectedPath.contains(gameState.apple)) {
+        if (playerProjectedPath.intersects(gameState.apple)) {
             gameState.score += 1;
             gameState.apple = randomlyPlaceApple(liveArea, playerHistoryPath);
         }
     }
+
+    buffer.push(new Sprite(gameState.apple, "ó"));
 
     spotlight.rotate(rotation);
     // spriteStack.add(spotlight.toSprite("+"));
@@ -110,7 +117,7 @@ ticker.add((delta) => {
     //     spriteStack.add(new Sprite(rayIntersection.point, "X"));
     // }
 
-    buffer.push(playerHistoryPath, { stroke: "-" });
+    buffer.push(playerHistoryPath);
     buffer.push(new Sprite(playerPos, "█"));
 
     canvas.draw(buffer);
@@ -119,8 +126,15 @@ ticker.add((delta) => {
 });
 
 function randomlyPlaceApple(liveArea: Rectangle, playerPath: Polygon) {
+    const liveAreaPoints = [];
+    for (let y = liveArea.topLeft.y; y < liveArea.bottomRight.y; y += 1) {
+        for (let x = liveArea.topLeft.x; x < liveArea.bottomRight.x; x += 1) {
+            liveAreaPoints.push({ x, y });
+        }
+    }
+
     const filledSpaces = new Set<string>(playerPath.lines.flatMap((l) => l.toPoints().map((p) => `${p.x},${p.y}`)));
-    const validSpaces = liveArea.toPoints().filter((p) => filledSpaces.has(`${p.x},${p.y}`) === false);
+    const validSpaces = liveAreaPoints.filter((p) => filledSpaces.has(`${p.x},${p.y}`) === false);
     return new Point(validSpaces[random(0, validSpaces.length - 1)]);
 }
 

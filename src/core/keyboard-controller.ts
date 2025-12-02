@@ -43,6 +43,7 @@ export class KeyboardController {
 
         window.addEventListener("keydown", this.#keydownHandler.bind(this));
         window.addEventListener("keyup", this.#keyupHandler.bind(this));
+        window.addEventListener("blur", this.reset.bind(this));
     }
 
     get vector(): Point | undefined {
@@ -100,5 +101,11 @@ export class KeyboardController {
         else {
             this.keys[key].timestamp = now;
         }
+    }
+
+    reset() {
+        Object.keys(this.keys).forEach((key) => {
+            this.keys[key].pressed = false;
+        });
     }
 }

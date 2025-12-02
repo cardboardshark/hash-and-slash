@@ -17,7 +17,8 @@ export class Ray {
     }
 
     contains(point: PointLike) {
-        return this.line.toPoints().some((p) => p.equals(point));
+        const pointClass = new Point(point);
+        return this.line.toPoints().some((p) => pointClass.equals(p));
     }
 
     getIntersection(shape: ShapeLike): IntersectionResult | false {
