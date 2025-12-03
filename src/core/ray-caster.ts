@@ -19,7 +19,7 @@ import { getLineIntersection } from "@/core/utils/collision-util";
 import { orderBy } from "lodash";
 
 export class RayCaster {
-    firstIntersction?: CollisionResult;
+    firstIntersection?: CollisionResult;
     intersections?: CollisionResult[];
     hasIntersection;
     line;
@@ -45,7 +45,7 @@ export class RayCaster {
             "asc"
         );
         this.intersections = sortedIntersections;
-        this.firstIntersction = sortedIntersections.at(0);
+        this.firstIntersection = sortedIntersections.at(0);
         this.hasIntersection = intersections.length > 0;
     }
 
