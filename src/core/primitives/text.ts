@@ -1,32 +1,30 @@
-import { BLANK_CHARACTER } from "@/core/core-constants";
-import { Point } from "@/core/primitives/point";
-import { Rectangle } from "@/core/primitives/rectangle";
-import { Sprite } from "@/core/primitives/sprite";
-import type { BoundingBox, PointLike, TextLike, TextOptions } from "@/core/types";
+import { isTextLike, type BoundingBox, type PointLike, type TextLike, type TextOptions } from "@/core/types";
 
 export class Text implements TextLike {
     x;
     y;
     text;
     options;
-    rectangle;
+    boundingBox;
 
-    constructor(point: PointLike, text: string | number, options: TextOptions = {}) {
-        this.x = point.x;
-        this.y = point.y;
-        this.text = String(text);
-        this.options = options;
+    constructor(text: TextLike);
+    constructor(point: PointLike, text: string | number, options?: TextOptions);
+    constructor(pointOrText: PointLike | TextLike, text?: string | number, options?: TextOptions) {
+        if (isTextLike(pointOrText)) {
+            this.x = pointOrText.x;
+            this.y = pointOrText.y;
+            this.text = pointOrText.text;
+            this.options = pointOrText.options;
+        } else if (text !== undefined) {
+            this.x = pointOrText.x;
+            this.y = pointOrText.y;
+            this.text = text;
+            this.options = options;
+        } else {
+            throw new Error("Invalid arguments passed to Text");
+        }
 
-        const splitText = this.text.split("\n");
-        const longestRow = splitText.reduce((max, line) => {
-            if (line.length > max) {
-                max = line.length;
-            }
-            return max;
-        }, 0);
-
-        // useful for collission checks
-        this.rectangle = new Rectangle(point, new Point(point).add(new Point(options.width ?? longestRow, options.maxLines ?? splitText.length)));
+        this.boundingBox = Text.calculateBoundingBox(this);
     }
 
     static calculateBoundingBox(text: TextLike): BoundingBox {

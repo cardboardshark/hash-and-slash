@@ -1,8 +1,8 @@
+import { Group } from "@/core/primitives/group";
 import { Canvas } from "./canvas";
 import type { KeyboardController } from "./keyboard-controller";
 import { Point } from "./primitives/point";
 import { Sprite } from "./primitives/sprite";
-import { CanvasBuffer } from "@/core/primitives/canvas-buffer";
 import { Text } from "@/core/primitives/text";
 
 const canvas = new Canvas({
@@ -13,21 +13,21 @@ const canvas = new Canvas({
 
 export function DisplayKeyboardInput(input: KeyboardController) {
     return () => {
-        const buffer = new CanvasBuffer();
+        const buffer = new Set();
 
         Object.entries(input.keys).forEach(([key, state], index) => {
             if (state.pressed) {
                 if (state.doubleTap) {
-                    buffer.push(new Sprite(new Point(0, index), "██"));
+                    buffer.add(new Sprite(new Point(0, index), "██"));
                 } else {
-                    buffer.push(new Sprite(new Point(0, index), "█"));
+                    buffer.add(new Sprite(new Point(0, index), "█"));
                 }
 
                 if (state.timestamp) {
-                    buffer.push(new Text(new Point(canvas.width - 1, index), `${Date.now() - state.timestamp}ms`, { align: "right" }));
+                    buffer.add(new Text(new Point(canvas.width - 1, index), `${Date.now() - state.timestamp}ms`, { align: "right" }));
                 }
             }
-            buffer.push(new Text(new Point(3, index), key.toUpperCase()));
+            buffer.add(new Text(new Point(3, index), key.toUpperCase()));
         });
 
         canvas.draw(buffer);

@@ -2,13 +2,13 @@ import { isRectangleLike, type BoundingBox, type PointLike, type RectangleLike }
 import { Line } from "./line";
 import { Shape } from "@/core/primitives/shape";
 import { calculateBoundingBox } from "@/core/utils/math-utils";
+import { Point } from "@/core/primitives/point";
 
 export class Rectangle extends Shape implements RectangleLike {
     topLeft;
     bottomRight;
-    width;
-    height;
     lines;
+    boundingBox;
 
     constructor(p0: RectangleLike);
     constructor(p0: PointLike, p1: PointLike);
@@ -24,18 +24,17 @@ export class Rectangle extends Shape implements RectangleLike {
             throw new Error("Invalid arguments passed to Rectangle");
         }
 
-        this.width = this.bottomRight.x - this.topLeft.x;
-        this.height = this.bottomRight.y - this.topLeft.y;
+        this.boundingBox = Rectangle.calculateBoundingBox(this);
 
         this.lines = [
             // top
-            new Line(this.topLeft, { x: this.bottomRight.x, y: this.topLeft.y }),
+            new Line(new Point(this.boundingBox.left, this.boundingBox.top), new Point(this.boundingBox.right, this.boundingBox.top)),
             // right
-            new Line({ x: this.bottomRight.x, y: this.topLeft.y }, this.bottomRight),
+            new Line(new Point(this.boundingBox.right, this.boundingBox.top), new Point(this.boundingBox.right, this.boundingBox.bottom)),
             // bottom
-            new Line({ x: this.topLeft.x, y: this.bottomRight.y }, { x: this.bottomRight.x, y: this.bottomRight.y }),
+            new Line(new Point(this.boundingBox.left, this.boundingBox.bottom), new Point(this.boundingBox.right, this.boundingBox.bottom)),
             // left
-            new Line(this.topLeft, { x: this.topLeft.x, y: this.bottomRight.y }),
+            new Line(new Point(this.boundingBox.left, this.boundingBox.top), new Point(this.boundingBox.left, this.boundingBox.bottom)),
         ];
     }
 

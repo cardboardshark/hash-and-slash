@@ -1,13 +1,13 @@
-import { type PolygonLike, type PointLike, isPolygonLike, type BoundingBox } from "@/core/types";
+import { type PolygonLike, type PointLike, isPolygonLike, type BoundingBox, type PolyLineLike } from "@/core/types";
 import { Line } from "./line";
 import { calculateBoundingBox } from "@/core/utils/math-utils";
 import { Shape } from "@/core/primitives/shape";
 
-export class Polygon extends Shape implements PolygonLike {
+export class PolyLine extends Shape implements PolyLineLike {
     points: PointLike[];
     lines: Line[];
-    closed: true = true;
-    boundingBox: BoundingBox;
+    closed: false = false;
+    boundingBox;
 
     constructor(shape: PolygonLike);
     constructor(points: PointLike[]);
@@ -21,7 +21,7 @@ export class Polygon extends Shape implements PolygonLike {
 
         this.lines = [];
         this.#calculateLines();
-        this.boundingBox = Polygon.calculateBoundingBox(this);
+        this.boundingBox = PolyLine.calculateBoundingBox(this);
     }
 
     #calculateLines() {
@@ -29,7 +29,9 @@ export class Polygon extends Shape implements PolygonLike {
         for (let i = 0; i <= this.points.length; i += 1) {
             const nextPoint = this.points.at(i + 1);
             if (nextPoint) {
-                this.lines.push(new Line(this.points[i], nextPoint));
+                const line = new Line(this.points[i], nextPoint);
+                line.stroke = this.stroke;
+                this.lines.push(line);
             }
         }
     }
@@ -49,7 +51,7 @@ export class Polygon extends Shape implements PolygonLike {
         return this.points[this.points.length - 1];
     }
 
-    static calculateBoundingBox(polygon: PolygonLike): BoundingBox {
-        return calculateBoundingBox(polygon.points);
+    static calculateBoundingBox(polyLine: PolyLineLike): BoundingBox {
+        return calculateBoundingBox(polyLine.points);
     }
 }

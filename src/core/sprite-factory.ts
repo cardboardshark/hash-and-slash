@@ -1,9 +1,58 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
-import type { LineLike, PointLike, PolygonLike, RectangleLike, TextLike } from "@/core/types";
+import { Point } from "@/core/primitives/point";
+import { Polygon } from "@/core/primitives/polygon";
+import { Sprite } from "@/core/primitives/sprite";
+import { Text } from "@/core/primitives/text";
+import {
+    isLineLike,
+    isPolygonLike,
+    isPolyLineLike,
+    isRectangleLike,
+    isTextLike,
+    type LineLike,
+    type PointLike,
+    type PolygonLike,
+    type RectangleLike,
+    type ShapeLike,
+    type TextLike,
+} from "@/core/types";
 import { calculateBoundingBox, calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
 
-export const Paint = {
-    polygon(polygonLike: PolygonLike): string {
+export const SpriteFactory = {
+    make(shape: ShapeLike) {
+        if (isRectangleLike(shape)) {
+            return new Sprite(shape.topLeft, this.makeRectangle(shape));
+        }
+
+        if (isPolygonLike(shape)) {
+            const polygon = new Polygon(shape);
+            const dimensions = calculateBoundingBox(polygon.points);
+            const output = this.makePolygon(polygon);
+            return new Sprite(new Point(dimensions.left, dimensions.top), output);
+        }
+
+        if (isPolyLineLike(shape)) {
+            return shape.lines.map((l) => {
+                const dimensions = calculateBoundingBox([l.start, l.end]);
+                return new Sprite(new Point(dimensions.left, dimensions.top), this.makeLine(l));
+            });
+        }
+
+        if (isLineLike(shape)) {
+            const dimensions = calculateBoundingBox([shape.start, shape.end]);
+            return new Sprite(new Point(dimensions.left, dimensions.top), this.makeLine(shape));
+        }
+
+        if (isTextLike(shape)) {
+            const dimensions = Text.calculateBoundingBox(shape);
+            return new Sprite(new Point(dimensions.left, dimensions.top), this.makeText(shape));
+        }
+
+        console.log(shape);
+        throw new Error("Unknown shape received");
+    },
+
+    makePolygon(polygonLike: PolygonLike): string {
         const dimensions = calculateBoundingBox(polygonLike.points);
         const { fill = "s", stroke = "S" } = polygonLike;
         const grid = Array.from({ length: dimensions.height }, () => Array.from({ length: dimensions.width }, () => BLANK_CHARACTER));
@@ -14,6 +63,7 @@ export const Paint = {
                 y: p.y - dimensions.top,
             };
         });
+
         // Draw polygon stroke
         for (let i = 0; i < polygon.length; i++) {
             const a = polygon[i];
@@ -32,13 +82,13 @@ export const Paint = {
         return grid.map((row) => row.join("")).join("\n");
     },
 
-    rectangle(shape: RectangleLike): string {
+    makeRectangle(shape: RectangleLike): string {
         const { fill = "r", stroke } = shape;
         let output = "";
-        for (let y = shape.topLeft.y; y < shape.bottomRight.y; y += 1) {
+        for (let y = shape.topLeft.y; y <= shape.bottomRight.y; y += 1) {
             let row = "";
-            for (let x = shape.topLeft.x; x < shape.bottomRight.x; x += 1) {
-                const isBorder = x === shape.topLeft.x || x === shape.bottomRight.x - 1 || y === shape.topLeft.y || y === shape.bottomRight.y - 1;
+            for (let x = shape.topLeft.x; x <= shape.bottomRight.x; x += 1) {
+                const isBorder = x === shape.topLeft.x || x === shape.bottomRight.x || y === shape.topLeft.y || y === shape.bottomRight.y;
                 if (isBorder) {
                     row += stroke ?? fill ?? " ";
                 } else {
@@ -50,7 +100,7 @@ export const Paint = {
         return output;
     },
 
-    line(line: LineLike) {
+    makeLine(line: LineLike) {
         const dimensions = calculateBoundingBox([line.start, line.end]);
         const { stroke = "l" } = line;
         const start = {
@@ -67,7 +117,7 @@ export const Paint = {
             return "";
         }
 
-        const grid = Array.from({ length: dimensions.height }, () => Array.from({ length: dimensions.width }, () => BLANK_CHARACTER));
+        const grid = Array.from({ length: dimensions.height + 1 }, () => Array.from({ length: dimensions.width + 1 }, () => BLANK_CHARACTER));
 
         const diagonalDistance = calculateDiagonalDistance(start, end);
         for (let step = 0; step <= diagonalDistance; step++) {
@@ -78,7 +128,7 @@ export const Paint = {
         return grid.map((row) => row.join("")).join("\n");
     },
 
-    text(text: TextLike): string {
+    makeText(text: TextLike): string {
         const splitText = String(text.text).split("\n");
         const longestRow = splitText.reduce((max, line) => {
             if (line.length > max) {
@@ -99,7 +149,7 @@ export const Paint = {
                     const halfDiff = Math.floor((numCharacters - line.length) / 2);
                     composedLine = [new String().padStart(halfDiff, fill), line, new String().padEnd(halfDiff, fill)].join("");
                     if (composedLine.length !== numCharacters) {
-                        composedLine.padEnd(numCharacters, fill);
+                        composedLine = composedLine.padEnd(numCharacters, fill);
                     }
                 } else {
                     composedLine = line.padStart(numCharacters, fill);

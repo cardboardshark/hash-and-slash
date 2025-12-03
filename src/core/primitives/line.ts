@@ -1,15 +1,4 @@
-import {
-    type LineLike,
-    type PointLike,
-    isLineLike,
-    type ShapeLike,
-    isPolygonLike,
-    isRectangleLike,
-    type IntersectionResult,
-    isPointLike,
-    type BoundingBox,
-} from "@/core/types";
-import { getLineIntersection } from "../utils/collision-util";
+import { type LineLike, type PointLike, isLineLike, type BoundingBox } from "@/core/types";
 import { Point } from "./point";
 import { calculateBoundingBox, calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
 import { Shape } from "@/core/primitives/shape";
@@ -19,6 +8,7 @@ export class Line extends Shape implements LineLike {
     end;
     length;
     radian;
+    boundingBox;
 
     constructor(p0: PointLike, p1: PointLike);
     constructor(line: LineLike);
@@ -38,48 +28,8 @@ export class Line extends Shape implements LineLike {
             dy = this.end.y - this.start.y;
         this.length = Math.max(Math.abs(dx), Math.abs(dy));
         this.radian = Math.atan2(this.end.y - this.start.y, this.end.x - this.start.x);
-    }
 
-    intersects(shape: ShapeLike): boolean {
-        return this.getIntersection(shape) !== false;
-    }
-
-    getIntersection(shape: ShapeLike | PointLike): IntersectionResult | false {
-        if (isPolygonLike(shape)) {
-            return shape.lines.reduce<IntersectionResult | false>((acc, l) => {
-                if (acc) {
-                    return acc;
-                }
-                const intersectionPoint = getLineIntersection(this, l);
-                if (intersectionPoint) {
-                    acc = { point: new Point(intersectionPoint), line: new Line(l) };
-                }
-                return acc;
-            }, false);
-        }
-        if (isRectangleLike(shape)) {
-            return shape.lines.reduce<IntersectionResult | false>((acc, l) => {
-                if (acc) {
-                    return acc;
-                }
-                const intersectionPoint = getLineIntersection(this, l);
-                if (intersectionPoint) {
-                    acc = { point: new Point(intersectionPoint), line: new Line(l) };
-                }
-                return acc;
-            }, false);
-        }
-        if (isPointLike(shape)) {
-            const point = new Point(shape);
-            const hasIntersection = this.toPoints().some((p) => point.equals(p));
-            return hasIntersection ? { point: point } : false;
-        }
-
-        const intersectionPoint = getLineIntersection(this, shape);
-        if (intersectionPoint) {
-            return { point: new Point(intersectionPoint), line: new Line(shape) };
-        }
-        return false;
+        this.boundingBox = Line.calculateBoundingBox(this);
     }
 
     toPoints() {

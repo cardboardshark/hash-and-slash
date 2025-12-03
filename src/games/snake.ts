@@ -2,23 +2,23 @@ import { Canvas } from "@/core/canvas";
 import { DEG_TO_RAD } from "@/core/core-constants";
 import { DisplayKeyboardInput } from "@/core/debug";
 import { KeyboardController } from "@/core/keyboard-controller";
-import { CanvasBuffer } from "@/core/primitives/canvas-buffer";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
-import { Polygon } from "@/core/primitives/polygon";
+import { PolyLine } from "@/core/primitives/poly-line";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Sprite } from "@/core/primitives/sprite";
 import { Text } from "@/core/primitives/text";
+import { RayCaster } from "@/core/ray-caster";
 import { Ticker } from "@/core/ticker";
 import { random } from "lodash";
 
 const config = {
-    fps: 10,
+    fps: 20,
     canvas: {
         width: 30,
         height: 30,
         element: document.querySelector<HTMLElement>(".canvas"),
-        fill: "#",
+        fill: "😭",
     },
 };
 
@@ -36,10 +36,11 @@ interface GameState {
     score: number;
 }
 
-const liveArea = new Rectangle({ x: 1, y: 1 }, { x: config.canvas.width - 1, y: config.canvas.height - 3 });
+const liveArea = new Rectangle({ x: 0, y: 0 }, { x: config.canvas.width - 1, y: config.canvas.height - 5 });
 liveArea.fill = " ";
+liveArea.stroke = "#";
 
-const playerHistoryPath = new Polygon([playerPos]);
+const playerHistoryPath = new PolyLine([playerPos]);
 playerHistoryPath.stroke = "-";
 
 const gameState: GameState = {
@@ -50,14 +51,27 @@ const gameState: GameState = {
 const spotlight = new Line(new Point(config.canvas.width / 2, config.canvas.height / 2), new Point(40, 15));
 let rotation = 0;
 
-ticker.add((delta) => {
-    const buffer = new CanvasBuffer();
+const scoreBox = new Rectangle(new Point(0, config.canvas.height - 5), new Point(config.canvas.width, config.canvas.height));
+scoreBox.fill = "█";
 
-    buffer.push(liveArea);
+const rectA = new Rectangle(new Point(5, 3), new Point(8, 5));
+rectA.fill = "a";
+console.log(rectA);
+
+const rectB = new Rectangle(new Point(20, 15), new Point(25, 22));
+rectB.fill = "b";
+
+ticker.add((delta) => {
+    const buffer = new Set();
+
+    buffer.add(liveArea);
+    buffer.add(scoreBox);
+    buffer.add(rectA);
+    buffer.add(rectB);
 
     // score
-    buffer.push(
-        new Text(new Point(1, config.canvas.height - 2), `My score is: ${gameState.score}`, { width: config.canvas.width - 2, align: "center", fill: " " })
+    buffer.add(
+        new Text(new Point(1, config.canvas.height - 4), `\nMy score is: ${gameState.score}\n`, { width: config.canvas.width - 2, align: "center", fill: " " })
     );
 
     let hasVectorChanged = false;
@@ -72,7 +86,7 @@ ticker.add((delta) => {
     if (playerHistoryPath.last && new Point(playerHistoryPath.last).equals(playerPos) === false) {
         const lastHistorySegment = new Line(playerHistoryPath.last, playerPos);
         lastHistorySegment.stroke = "-";
-        buffer.push(lastHistorySegment);
+        buffer.add(lastHistorySegment);
     }
 
     if (playerVector.equals({ x: 0, y: 0 }) === false) {
@@ -81,27 +95,32 @@ ticker.add((delta) => {
         const newPos = playerPos.add(playerVectorWithSpeed);
         const playerProjectedPath = new Line(playerPos, newPos);
         playerProjectedPath.stroke = "=";
-        if (playerProjectedPath.intersects(liveArea)) {
-            console.log("OUT OF FBOUNDS");
-        }
-        buffer.push(playerProjectedPath);
+
+        buffer.add(playerProjectedPath);
 
         const outOfBounds = liveArea.contains(newPos) === false;
-        // const hasCollission = playerHistoryPath.strokeContains(newPos);
-        const hasCollission = false;
-        if (outOfBounds || hasCollission) {
+        const historyIntersection = new RayCaster(playerProjectedPath, [rectA, rectB, liveArea]);
+
+        if (historyIntersection.firstIntersction?.face) {
+            const intersectionFace = new Line(historyIntersection.firstIntersction?.face);
+            intersectionFace.stroke = "X";
+            buffer.add(intersectionFace);
+            buffer.add(new Sprite(historyIntersection.firstIntersction.point, "*"));
+        }
+        if (outOfBounds || historyIntersection.hasIntersection) {
             console.log("oh no");
         } else {
             playerPos = newPos;
         }
-
-        if (playerProjectedPath.intersects(gameState.apple)) {
+        const rayResult = new RayCaster(playerProjectedPath, gameState.apple);
+        if (rayResult.hasIntersection) {
             gameState.score += 1;
             gameState.apple = randomlyPlaceApple(liveArea, playerHistoryPath);
         }
     }
 
-    buffer.push(new Sprite(gameState.apple, "ó"));
+    buffer.add(new Sprite(gameState.apple, "ó"));
+    console.log(gameState.apple);
 
     spotlight.rotate(rotation);
     // spriteStack.add(spotlight.toSprite("+"));
@@ -117,15 +136,15 @@ ticker.add((delta) => {
     //     spriteStack.add(new Sprite(rayIntersection.point, "X"));
     // }
 
-    buffer.push(playerHistoryPath);
-    buffer.push(new Sprite(playerPos, "█"));
+    buffer.add(playerHistoryPath);
+    buffer.add(new Sprite(playerPos, "█"));
 
     canvas.draw(buffer);
 
     rotation += 3 * DEG_TO_RAD;
 });
 
-function randomlyPlaceApple(liveArea: Rectangle, playerPath: Polygon) {
+function randomlyPlaceApple(liveArea: Rectangle, playerPath: PolyLine) {
     const liveAreaPoints = [];
     for (let y = liveArea.topLeft.y; y < liveArea.bottomRight.y; y += 1) {
         for (let x = liveArea.topLeft.x; x < liveArea.bottomRight.x; x += 1) {
