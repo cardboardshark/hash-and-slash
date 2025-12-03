@@ -2,6 +2,7 @@ import { type PolygonLike, type PointLike, isPolygonLike, type BoundingBox } fro
 import { Line } from "./line";
 import { calculateBoundingBox } from "@/core/utils/math-utils";
 import { Shape } from "@/core/primitives/shape";
+import { Point } from "@/core/primitives/point";
 
 export class Polygon extends Shape implements PolygonLike {
     points: PointLike[];
@@ -26,10 +27,14 @@ export class Polygon extends Shape implements PolygonLike {
 
     #calculateLines() {
         this.lines = [];
-        for (let i = 0; i <= this.points.length; i += 1) {
-            const nextPoint = this.points.at(i + 1);
+
+        const isClosed = new Point(this.points[0]).equals(this.points[this.points.length - 1]);
+
+        const composedPoints = isClosed ? this.points : [...this.points, this.points[0]];
+        for (let i = 0; i <= composedPoints.length; i += 1) {
+            const nextPoint = composedPoints.at(i + 1);
             if (nextPoint) {
-                this.lines.push(new Line(this.points[i], nextPoint));
+                this.lines.push(new Line(composedPoints[i], nextPoint));
             }
         }
     }
