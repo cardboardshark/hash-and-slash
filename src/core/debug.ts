@@ -1,4 +1,4 @@
-import { Group } from "@/core/primitives/group";
+import { Container } from "@/core/primitives/container";
 import { Canvas } from "./canvas";
 import type { KeyboardController } from "./keyboard-controller";
 import { Point } from "./primitives/point";
@@ -13,7 +13,7 @@ const canvas = new Canvas({
 
 export function DisplayKeyboardInput(input: KeyboardController) {
     return () => {
-        const buffer = new Set();
+        const buffer = new Container();
 
         Object.entries(input.keys).forEach(([key, state], index) => {
             if (state.pressed) {

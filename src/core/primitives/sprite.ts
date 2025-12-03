@@ -1,4 +1,5 @@
-import { isSpriteLike, type PointLike, type SpriteLike } from "@/core/types";
+import { Point } from "@/core/primitives/point";
+import { isPointLike, isSpriteLike, type PointLike, type SpriteLike } from "@/core/types";
 
 export class Sprite implements SpriteLike {
     x;
@@ -19,5 +20,22 @@ export class Sprite implements SpriteLike {
         } else {
             throw new Error("Invalid arguments passed to Sprite");
         }
+    }
+
+    get point() {
+        return new Point(this.x, this.y);
+    }
+
+    set(point: PointLike): this;
+    set(x: number, y: number): this;
+    set(xOrPoint: number | PointLike, y?: number) {
+        if (isPointLike(xOrPoint)) {
+            this.x = xOrPoint.x;
+            this.y = xOrPoint.y;
+        } else if (y !== undefined) {
+            this.x = xOrPoint;
+            this.y = y;
+        }
+        return this;
     }
 }

@@ -2,6 +2,7 @@ import { Canvas } from "@/core/canvas";
 import { DEG_TO_RAD } from "@/core/core-constants";
 import { DisplayKeyboardInput } from "@/core/debug";
 import { KeyboardController } from "@/core/keyboard-controller";
+import { Container } from "@/core/primitives/container";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
@@ -13,16 +14,17 @@ import { Ticker } from "@/core/ticker";
 import { random } from "lodash";
 
 const config = {
-    fps: 20,
+    fps: 10,
     canvas: {
         width: 30,
         height: 30,
         element: document.querySelector<HTMLElement>(".canvas"),
-        fill: "😭",
+        fill: "≍",
     },
 };
 
 const canvas = new Canvas(config.canvas);
+canvas.debugMode = true;
 const ticker = new Ticker(config.fps);
 const input = new KeyboardController();
 
@@ -51,28 +53,23 @@ const gameState: GameState = {
 const spotlight = new Line(new Point(config.canvas.width / 2, config.canvas.height / 2), new Point(40, 15));
 let rotation = 0;
 
-const scoreBox = new Rectangle(new Point(0, config.canvas.height - 5), new Point(config.canvas.width, config.canvas.height));
-scoreBox.fill = "█";
-
-const rectA = new Rectangle(new Point(5, 3), new Point(8, 5));
-rectA.fill = "a";
-console.log(rectA);
-
-const rectB = new Rectangle(new Point(20, 15), new Point(25, 22));
-rectB.fill = "b";
+// const scoreBox = new Rectangle(new Point(0, config.canvas.height - 5), new Point(config.canvas.width, config.canvas.height));
+// scoreBox.fill = "█";
 
 ticker.add((delta) => {
-    const buffer = new Set();
+    const buffer = new Container();
 
     buffer.add(liveArea);
-    buffer.add(scoreBox);
-    buffer.add(rectA);
-    buffer.add(rectB);
+    // buffer.add(scoreBox);
+    const scoreBox = new Rectangle(new Point(0, 0), new Point(config.canvas.width, 4));
+    scoreBox.fill = "█";
 
-    // score
-    buffer.add(
-        new Text(new Point(1, config.canvas.height - 4), `\nMy score is: ${gameState.score}\n`, { width: config.canvas.width - 2, align: "center", fill: " " })
-    );
+    const group = new Container([
+        scoreBox,
+        new Text(new Point(1, 1), `\nMy score is: ${gameState.score}\n`, { width: config.canvas.width - 2, align: "center", fill: " " }),
+    ]);
+    group.set(0, config.canvas.height - 5);
+    buffer.add(group);
 
     let hasVectorChanged = false;
     if (input.vector) {
@@ -99,7 +96,7 @@ ticker.add((delta) => {
         buffer.add(playerProjectedPath);
 
         const outOfBounds = liveArea.contains(newPos) === false;
-        const historyIntersection = new RayCaster(playerProjectedPath, [rectA, rectB, liveArea]);
+        const historyIntersection = new RayCaster(playerProjectedPath, [liveArea]);
 
         if (historyIntersection.firstIntersction?.face) {
             const intersectionFace = new Line(historyIntersection.firstIntersction?.face);
@@ -120,7 +117,6 @@ ticker.add((delta) => {
     }
 
     buffer.add(new Sprite(gameState.apple, "ó"));
-    console.log(gameState.apple);
 
     spotlight.rotate(rotation);
     // spriteStack.add(spotlight.toSprite("+"));

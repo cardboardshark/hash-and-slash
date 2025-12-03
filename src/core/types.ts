@@ -11,8 +11,9 @@ export type PolyLineLike = { points: PointLike[]; lines: LineLike[]; closed: fal
 export type TextLike = PointLike & { text: string | number; options?: TextOptions };
 export type GroupLike = PointLike & { items: (SpriteLike | ShapeLike | GroupLike)[] };
 export type ShapeLike = LineLike | RectangleLike | PolygonLike | PolyLineLike | TextLike;
+export type ContainerLike = PointLike & { children: Renderable[] };
 
-export type Renderable = ShapeLike | SpriteLike;
+export type Renderable = ShapeLike | SpriteLike | ContainerLike;
 
 export interface TextOptions {
     align?: "left" | "center" | "right";
@@ -55,6 +56,9 @@ export function isRectangleLike(shape: unknown): shape is RectangleLike {
 }
 export function isLineLike(shape: unknown): shape is LineLike {
     return typeof shape === "object" && shape !== null && "start" in shape && "end" in shape;
+}
+export function isContainerLike(shape: unknown): shape is ContainerLike {
+    return isPointLike(shape) && "children" in shape;
 }
 
 export interface CollisionResult {

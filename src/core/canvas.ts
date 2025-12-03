@@ -1,7 +1,10 @@
 import { SpriteFactory } from "@/core/sprite-factory";
 import { BLANK_CHARACTER } from "@/core/core-constants";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { isSpriteLike, type Renderable, type SpriteLike } from "@/core/types";
+import { isContainerLike, isSpriteLike, type PointLike, type Renderable, type SpriteLike } from "@/core/types";
+import { Container } from "@/core/primitives/container";
+import { Point } from "@/core/primitives/point";
+import { Sprite } from "@/core/primitives/sprite";
 
 type CanvasConfig = {
     width: number;
@@ -11,7 +14,7 @@ type CanvasConfig = {
 };
 export class Canvas {
     #config;
-    debugMode = true;
+    debugMode = false;
 
     constructor(config: CanvasConfig) {
         this.#config = config;
@@ -25,40 +28,38 @@ export class Canvas {
         return this.#config.height;
     }
 
-    #hydrateBuffer(buffer: Renderable | Renderable[] | Set<unknown> | Set<unknown>[]): SpriteLike[] {
-        if (Array.isArray(buffer)) {
-            return buffer.reduce<SpriteLike[]>((acc, item) => {
-                const product = this.#hydrateBuffer(item);
-                if (Array.isArray(product)) {
-                    acc.push(...product);
-                } else {
-                    acc.push(product);
-                }
-                return acc;
-            }, []);
-        }
+    #hydrateBuffer(container: Container): SpriteLike[] {
+        return container.children.reduce<SpriteLike[]>((sprites, item) => {
+            if (isContainerLike(item)) {
+                const childContainer = item instanceof Container ? item : new Container(item);
+                sprites.push(...this.#hydrateBuffer(childContainer));
+            } else if (isSpriteLike(item)) {
+                const sprite = item instanceof Sprite ? item : new Sprite(item);
 
-        if (buffer instanceof Set) {
-            const setItems = Array.from(buffer) as Renderable[];
-            return this.#hydrateBuffer(setItems);
-        }
-
-        const sprites: SpriteLike[] = [];
-        if (isSpriteLike(buffer)) {
-            sprites.push(buffer);
-        } else {
-            const product = SpriteFactory.make(buffer);
-            if (Array.isArray(product)) {
-                sprites.push(...product);
+                // apply any offset values
+                sprite.set(sprite.point.add(container.point));
+                sprites.push(sprite);
             } else {
-                sprites.push(product);
+                const result = SpriteFactory.make(item);
+                if (Array.isArray(result)) {
+                    sprites.push(
+                        ...result.map((sprite) => {
+                            sprite.set(sprite.point.add(container.point));
+                            return sprite;
+                        })
+                    );
+                } else {
+                    // apply any offset values
+                    result.set(result.point.add(container.point));
+                    sprites.push(result);
+                }
             }
-        }
 
-        return sprites;
+            return sprites;
+        }, []);
     }
 
-    draw(buffer: Renderable | Renderable[] | Set<unknown> | Set<unknown>[]) {
+    draw(buffer: Container) {
         let pixels = Array.from({ length: this.#config.height })
             .fill(null)
             .map(() => Array.from({ length: this.#config.width }).fill(this.#config.fill ?? " "));
@@ -93,7 +94,7 @@ export class Canvas {
 
             // prepend y-axis ruler
             pixels = pixels.map((column, index) => {
-                return [`${String(index).padStart(2, " ")}→`, ...column];
+                return [`${String(index).padStart(2, " ")}→`, ...column, `←${String(index).padEnd(2, " ")}`];
             });
 
             pixels.unshift(["   ", ...firstRow.map(() => "↓")]);
@@ -106,6 +107,27 @@ export class Canvas {
                         return " ";
                     }
                     return firstDigit;
+                }),
+            ]);
+            pixels.push(["   ", ...firstRow.map(() => "↑")]);
+            pixels.push([
+                "   ",
+                ...firstRow.map((_value, index) => {
+                    const firstDigit = Math.floor(index / 10);
+                    if (firstDigit === 0) {
+                        return index % 10;
+                    }
+                    return firstDigit;
+                }),
+            ]);
+            pixels.push([
+                "   ",
+                ...firstRow.map((_value, index) => {
+                    const firstDigit = Math.floor(index / 10);
+                    if (firstDigit === 0) {
+                        return " ";
+                    }
+                    return index % 10;
                 }),
             ]);
         }
