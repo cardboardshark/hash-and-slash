@@ -22,14 +22,13 @@ export class RayCaster {
     firstIntersection?: CollisionResult;
     intersections?: CollisionResult[];
     hasIntersection;
-    line;
 
     constructor(lineOrRay: LineLike | Ray, haystack: PointLike | ShapeLike | (PointLike | ShapeLike)[]) {
-        this.line = lineOrRay instanceof Ray ? lineOrRay.line : new Line(lineOrRay);
+        const line = lineOrRay instanceof Ray ? lineOrRay.line : new Line(lineOrRay);
         const haystackAsArray = Array.isArray(haystack) ? haystack : [haystack];
 
         const intersections = haystackAsArray.reduce<CollisionResult[]>((acc, shape) => {
-            const intersection = this.#test(shape);
+            const intersection = this.#test(line, shape);
             if (intersection.length > 0) {
                 acc.push(...intersection);
             }
@@ -39,7 +38,7 @@ export class RayCaster {
         const sortedIntersections = orderBy(
             intersections,
             ({ point }) => {
-                const distanceFromPrimaryRay = new Point(this.line.start).distanceTo(point);
+                const distanceFromPrimaryRay = new Point(line.start).distanceTo(point);
                 return distanceFromPrimaryRay;
             },
             "asc"
@@ -49,10 +48,10 @@ export class RayCaster {
         this.hasIntersection = intersections.length > 0;
     }
 
-    #test(shape: PointLike | ShapeLike): CollisionResult[] {
+    #test(line: Line, shape: PointLike | ShapeLike): CollisionResult[] {
         if (isPolygonLike(shape) || isRectangleLike(shape) || isPolyLineLike(shape)) {
             return shape.lines.reduce<CollisionResult[]>((acc, l) => {
-                const point = getLineIntersection(this.line, l);
+                const point = getLineIntersection(line, l);
                 if (point) {
                     acc.push({ point, shape, face: l });
                 }
@@ -66,18 +65,18 @@ export class RayCaster {
                 new Point(textAsShape.boundingBox.left, textAsShape.boundingBox.top),
                 new Point(textAsShape.boundingBox.right, textAsShape.boundingBox.bottom)
             );
-            return this.#test(rectangle);
+            return this.#test(line, rectangle);
         }
 
         if (isLineLike(shape)) {
-            const point = getLineIntersection(this.line, shape);
+            const point = getLineIntersection(line, shape);
             if (point) {
                 return [{ point, shape, face: shape }];
             }
         }
 
         if (isPointLike(shape)) {
-            if (this.line.toPoints().some(({ x, y }) => shape.x === x && shape.y === y)) {
+            if (line.toPoints().some(({ x, y }) => shape.x === x && shape.y === y)) {
                 return [{ point: shape }];
             }
         }

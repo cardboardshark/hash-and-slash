@@ -6,6 +6,8 @@ import { Container } from "@/core/primitives/container";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
+import { Polygon } from "@/core/primitives/polygon";
+import { Ray } from "@/core/primitives/ray";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Sprite } from "@/core/primitives/sprite";
 import { Text } from "@/core/primitives/text";
@@ -43,15 +45,15 @@ liveArea.fill = " ";
 liveArea.stroke = "#";
 
 const playerHistoryPath = new PolyLine([playerPos]);
-playerHistoryPath.stroke = "-";
+// playerHistoryPath.stroke = "-";
 
 const gameState: GameState = {
     apple: randomlyPlaceApple(liveArea, playerHistoryPath),
     score: 0,
 };
 
-const spotlight = new Line(new Point(config.canvas.width / 2, config.canvas.height / 2), new Point(40, 15));
-let rotation = 0;
+// const spotlight = new Line(new Point(config.canvas.width / 2, config.canvas.height / 2), new Point(40, 15));
+// let rotation = 0;
 
 // const scoreBox = new Rectangle(new Point(0, config.canvas.height - 5), new Point(config.canvas.width, config.canvas.height));
 // scoreBox.fill = "█";
@@ -88,37 +90,62 @@ ticker.add((delta) => {
 
     if (playerVector.equals({ x: 0, y: 0 }) === false) {
         const playerVectorWithSpeed = new Point(playerVector).multiplyScalar(playerSpeed);
-
         const newPos = playerPos.add(playerVectorWithSpeed);
-        const playerProjectedPath = new Line(playerPos, newPos);
-        playerProjectedPath.stroke = "=";
 
-        buffer.add(playerProjectedPath);
+        const playerPathRay = new Ray(playerPos, playerVector, playerSpeed);
+
+        const playerPathIntersection = new RayCaster(playerPathRay, [liveArea, playerHistoryPath]);
+
+        if (playerPathIntersection.firstIntersection) {
+            if (playerPathIntersection.firstIntersection?.face) {
+                const intersectionFace = new Line(playerPathIntersection.firstIntersection?.face);
+                intersectionFace.stroke = "X";
+                buffer.add(intersectionFace);
+
+                buffer.add(new Sprite(playerPathIntersection.firstIntersection.point, "*"));
+            }
+        }
+
+        console.log(playerPathIntersection);
 
         const outOfBounds = liveArea.contains(newPos) === false;
-        const historyIntersection = new RayCaster(playerProjectedPath, [liveArea]);
+        const hasCollission = newPos.equals(playerPathIntersection.firstIntersection?.point);
 
-        if (historyIntersection.firstIntersction?.face) {
-            const intersectionFace = new Line(historyIntersection.firstIntersction?.face);
-            intersectionFace.stroke = "X";
-            buffer.add(intersectionFace);
-            buffer.add(new Sprite(historyIntersection.firstIntersction.point, "*"));
-        }
-        if (outOfBounds || historyIntersection.hasIntersection) {
-            console.log("oh no");
-        } else {
+        if (hasCollission) {
+            // bounce the player away from the face
+            if (playerPathIntersection.firstIntersection?.point) {
+                const safePoint = new Point(playerPathIntersection.firstIntersection.point).subtract(playerVector);
+                playerPos = safePoint;
+            }
+        } else if (outOfBounds === false) {
             playerPos = newPos;
         }
-        const rayResult = new RayCaster(playerProjectedPath, gameState.apple);
-        if (rayResult.hasIntersection) {
+
+        if (playerPos.equals(gameState.apple)) {
             gameState.score += 1;
             gameState.apple = randomlyPlaceApple(liveArea, playerHistoryPath);
         }
+
+        // if (outOfBounds || historyIntersection.hasIntersection) {
+        //     console.log("oh no");
+        // } else {
+        //     playerPos = newPos;
+        // }
+        // const rayResult = new RayCaster(playerProjectedPath, gameState.apple);
+        // if (rayResult.hasIntersection) {
+        //     gameState.score += 1;
+        //     gameState.apple = randomlyPlaceApple(liveArea, playerHistoryPath);
+        // }
     }
 
     buffer.add(new Sprite(gameState.apple, "ó"));
 
-    spotlight.rotate(rotation);
+    buffer.add(playerHistoryPath);
+    buffer.add(new Sprite(playerPos, "█"));
+
+    canvas.draw(buffer);
+
+    // spotlight.rotate(rotation);
     // spriteStack.add(spotlight.toSprite("+"));
 
     // const rayIntersection = spotlight.getIntersection(liveArea);
@@ -131,13 +158,6 @@ ticker.add((delta) => {
     //     spriteStack.add(rayBounce.toSprite("-"));
     //     spriteStack.add(new Sprite(rayIntersection.point, "X"));
     // }
-
-    buffer.add(playerHistoryPath);
-    buffer.add(new Sprite(playerPos, "█"));
-
-    canvas.draw(buffer);
-
-    rotation += 3 * DEG_TO_RAD;
 });
 
 function randomlyPlaceApple(liveArea: Rectangle, playerPath: PolyLine) {

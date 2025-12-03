@@ -39,8 +39,8 @@ export class Rectangle extends Shape implements RectangleLike {
     }
 
     contains(point: PointLike) {
-        const isInXRange = point.x >= this.topLeft.x && point.x < this.bottomRight.x;
-        const isInYRange = point.y >= this.topLeft.y && point.y < this.bottomRight.y;
+        const isInXRange = point.x >= this.topLeft.x && point.x <= this.bottomRight.x;
+        const isInYRange = point.y >= this.topLeft.y && point.y <= this.bottomRight.y;
         return isInXRange && isInYRange;
     }
 

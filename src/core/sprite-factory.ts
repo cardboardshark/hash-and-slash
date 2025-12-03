@@ -17,6 +17,7 @@ import {
     type TextLike,
 } from "@/core/types";
 import { calculateBoundingBox, calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
+import { fill } from "lodash";
 
 export const SpriteFactory = {
     make(shape: ShapeLike) {
@@ -102,7 +103,7 @@ export const SpriteFactory = {
 
     makeLine(line: LineLike) {
         const dimensions = calculateBoundingBox([line.start, line.end]);
-        const { stroke = "l" } = line;
+        const { stroke = "l", fill = "L" } = line;
         const start = {
             x: line.start.x - dimensions.left,
             y: line.start.y - dimensions.top,
@@ -123,7 +124,8 @@ export const SpriteFactory = {
         for (let step = 0; step <= diagonalDistance; step++) {
             const t = diagonalDistance === 0 ? 0.0 : step / diagonalDistance;
             const { x, y } = lerpPoint(start, end, t);
-            grid[y][x] = stroke;
+            const isPoint = (start.x === x && start.y === y) || (end.x === x && end.y === y);
+            grid[y][x] = isPoint ? fill : stroke;
         }
         return grid.map((row) => row.join("")).join("\n");
     },
