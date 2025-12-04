@@ -1,4 +1,4 @@
-import type { RectangleLike, LineLike } from "@/core/types";
+import type { RectangleLike, LineLike, PointLike } from "@/core/types";
 
 /**
  * Determine if two Axis-aligned bounding box elements have overlapping pixels.
@@ -22,7 +22,7 @@ export function doRectanglesIntersect(r0: RectangleLike, r1: RectangleLike) {
 // line intercept math by Paul Bourke http://paulbourke.net/geometry/pointlineplane/
 // Determine the intersection point of two line segments
 // Return FALSE if the lines don't intersect
-export function getLineIntersection(lineA: LineLike, lineB: LineLike) {
+export function findLineIntersection(lineA: LineLike, lineB: LineLike) {
     const { x: x1, y: y1 } = lineA.start;
     const { x: x2, y: y2 } = lineA.end;
 
@@ -54,4 +54,16 @@ export function getLineIntersection(lineA: LineLike, lineB: LineLike) {
     let y = y1 + ua * (y2 - y1);
 
     return { x, y };
+}
+
+export function findPointIntersection(needle: PointLike[], haystack: PointLike[]) {
+    const needleAsStrings = needle.map((p) => `${p.x}-${p.y}`);
+    const haystackAsStrings = haystack.map((p) => `${p.x}-${p.y}`);
+    console.log(needleAsStrings, haystackAsStrings);
+    const index = needleAsStrings.findIndex((pString) => haystackAsStrings.includes(pString));
+    if (index !== -1) {
+        console.log(index, needle.at(index));
+    }
+
+    return index !== -1 ? needle.at(index) : undefined;
 }

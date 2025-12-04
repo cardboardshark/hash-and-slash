@@ -19,6 +19,11 @@ export class Point {
         }
     }
 
+    set(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+
     add(point: PointLike) {
         return new Point({ x: this.x + point.x, y: this.y + point.y });
     }
@@ -27,6 +32,9 @@ export class Point {
     }
     round() {
         return new Point({ x: Math.round(this.x), y: Math.round(this.y) });
+    }
+    clone() {
+        return new Point(this);
     }
 
     distanceTo(point: PointLike) {

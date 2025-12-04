@@ -12,8 +12,9 @@ export type TextLike = PointLike & { text: string | number; options?: TextOption
 export type GroupLike = PointLike & { items: (SpriteLike | ShapeLike | GroupLike)[] };
 export type ShapeLike = LineLike | RectangleLike | PolygonLike | PolyLineLike | TextLike;
 export type ContainerLike = PointLike & { children: Renderable[] };
+export type RenderableEntity = { toRenderable: () => ShapeLike | SpriteLike | ContainerLike };
 
-export type Renderable = ShapeLike | SpriteLike | ContainerLike;
+export type Renderable = ShapeLike | SpriteLike | ContainerLike | RenderableEntity;
 
 export interface TextOptions {
     align?: "left" | "center" | "right";
@@ -59,6 +60,12 @@ export function isLineLike(shape: unknown): shape is LineLike {
 }
 export function isContainerLike(shape: unknown): shape is ContainerLike {
     return isPointLike(shape) && "children" in shape;
+}
+export function isRenderableEntity(shape: unknown): shape is RenderableEntity {
+    return typeof shape === "object" && shape !== null && "toRenderable" in shape;
+}
+export function isShapeLike(shape: unknown): shape is ShapeLike {
+    return isLineLike(shape) || isRectangleLike(shape) || isPolygonLike(shape) || isPolyLineLike(shape) || isTextLike(shape);
 }
 
 export interface CollisionResult {

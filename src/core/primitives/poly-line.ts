@@ -8,6 +8,7 @@ export class PolyLine extends Shape implements PolyLineLike {
     lines: Line[];
     closed: false = false;
     boundingBox;
+    length;
 
     constructor(shape: PolygonLike);
     constructor(points: PointLike[]);
@@ -21,6 +22,7 @@ export class PolyLine extends Shape implements PolyLineLike {
 
         this.lines = [];
         this.#calculateLines();
+        this.length = this.lines.reduce((sum, l) => sum + l.length, 0);
         this.boundingBox = PolyLine.calculateBoundingBox(this);
     }
 
@@ -37,11 +39,17 @@ export class PolyLine extends Shape implements PolyLineLike {
     }
 
     add(point: PointLike) {
-        if (this.last) {
-            this.lines.push(new Line(this.last, point));
-        }
         this.points.push(point);
         this.#calculateLines();
+        this.length = this.lines.reduce((sum, l) => sum + l.length, 0);
+        this.boundingBox = PolyLine.calculateBoundingBox(this);
+    }
+
+    prepend(point: PointLike) {
+        this.points.unshift(point);
+        this.#calculateLines();
+        this.length = this.lines.reduce((sum, l) => sum + l.length, 0);
+        this.boundingBox = PolyLine.calculateBoundingBox(this);
     }
 
     get last() {

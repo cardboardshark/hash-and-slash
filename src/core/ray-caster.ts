@@ -15,7 +15,7 @@ import {
     type PointLike,
     type ShapeLike,
 } from "@/core/types";
-import { getLineIntersection } from "@/core/utils/collision-util";
+import { findLineIntersection, findPointIntersection } from "@/core/utils/collision-util";
 import { orderBy } from "lodash";
 
 export class RayCaster {
@@ -50,8 +50,11 @@ export class RayCaster {
 
     #test(line: Line, shape: PointLike | ShapeLike): CollisionResult[] {
         if (isPolygonLike(shape) || isRectangleLike(shape) || isPolyLineLike(shape)) {
+            const linePoints = line.toPoints();
             return shape.lines.reduce<CollisionResult[]>((acc, l) => {
-                const point = getLineIntersection(line, l);
+                // Hacky and slow
+                // const point = findPointIntersection(linePoints, new Line(l).toPoints());
+                const point = findLineIntersection(line, l);
                 if (point) {
                     acc.push({ point, shape, face: l });
                 }
@@ -69,7 +72,7 @@ export class RayCaster {
         }
 
         if (isLineLike(shape)) {
-            const point = getLineIntersection(line, shape);
+            const point = findLineIntersection(line, shape);
             if (point) {
                 return [{ point, shape, face: shape }];
             }

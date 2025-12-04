@@ -7,7 +7,7 @@ export default defineConfig({
     resolve: {
         alias: {
             "@/core/": "/src/core/",
-            "@/games/": "/src/games",
+            "@/games/": "/src/games/",
         },
     },
 });

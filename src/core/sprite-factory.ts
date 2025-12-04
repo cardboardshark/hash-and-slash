@@ -17,7 +17,6 @@ import {
     type TextLike,
 } from "@/core/types";
 import { calculateBoundingBox, calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
-import { fill } from "lodash";
 
 export const SpriteFactory = {
     make(shape: ShapeLike) {
@@ -76,7 +75,7 @@ export const SpriteFactory = {
         for (let y = 0; y < dimensions.height; y++) {
             for (let x = 0; x < dimensions.width; x++) {
                 if (grid[y][x] === BLANK_CHARACTER && isInside(polygon, x, y)) {
-                    grid[y][x] = fill;
+                    grid[y][x] = fill.substring(0, 1);
                 }
             }
         }
@@ -91,9 +90,9 @@ export const SpriteFactory = {
             for (let x = shape.topLeft.x; x <= shape.bottomRight.x; x += 1) {
                 const isBorder = x === shape.topLeft.x || x === shape.bottomRight.x || y === shape.topLeft.y || y === shape.bottomRight.y;
                 if (isBorder) {
-                    row += stroke ?? fill ?? " ";
+                    row += (stroke ?? fill ?? " ").substring(0, 1);
                 } else {
-                    row += fill ?? " ";
+                    row += (fill ?? " ").substring(0, 1);
                 }
             }
             output += `${row}\n`;
@@ -103,7 +102,7 @@ export const SpriteFactory = {
 
     makeLine(line: LineLike) {
         const dimensions = calculateBoundingBox([line.start, line.end]);
-        const { stroke = "l", fill = "L" } = line;
+        const { stroke = "l", fill } = line;
         const start = {
             x: line.start.x - dimensions.left,
             y: line.start.y - dimensions.top,
@@ -125,7 +124,7 @@ export const SpriteFactory = {
             const t = diagonalDistance === 0 ? 0.0 : step / diagonalDistance;
             const { x, y } = lerpPoint(start, end, t);
             const isPoint = (start.x === x && start.y === y) || (end.x === x && end.y === y);
-            grid[y][x] = isPoint ? fill : stroke;
+            grid[y][x] = (isPoint && fill ? fill : stroke).substring(0, 1);
         }
         return grid.map((row) => row.join("")).join("\n");
     },

@@ -1,9 +1,8 @@
 import { SpriteFactory } from "@/core/sprite-factory";
 import { BLANK_CHARACTER } from "@/core/core-constants";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { isContainerLike, isSpriteLike, type PointLike, type Renderable, type SpriteLike } from "@/core/types";
+import { isContainerLike, isRenderableEntity, isShapeLike, isSpriteLike, type Renderable, type SpriteLike } from "@/core/types";
 import { Container } from "@/core/primitives/container";
-import { Point } from "@/core/primitives/point";
 import { Sprite } from "@/core/primitives/sprite";
 
 type CanvasConfig = {
@@ -32,27 +31,41 @@ export class Canvas {
         return container.children.reduce<SpriteLike[]>((sprites, item) => {
             if (isContainerLike(item)) {
                 const childContainer = item instanceof Container ? item : new Container(item);
-                sprites.push(...this.#hydrateBuffer(childContainer));
-            } else if (isSpriteLike(item)) {
+                return sprites.concat(this.#hydrateBuffer(childContainer));
+            }
+
+            if (isSpriteLike(item)) {
                 const sprite = item instanceof Sprite ? item : new Sprite(item);
 
                 // apply any offset values
                 sprite.set(sprite.point.add(container.point));
-                sprites.push(sprite);
-            } else {
-                const result = SpriteFactory.make(item);
-                if (Array.isArray(result)) {
-                    sprites.push(
-                        ...result.map((sprite) => {
-                            sprite.set(sprite.point.add(container.point));
-                            return sprite;
-                        })
-                    );
+                return [...sprites, sprite];
+            }
+
+            if (isRenderableEntity(item)) {
+                const result = item.toRenderable();
+                let childContainer: Container;
+                if (isContainerLike(result)) {
+                    childContainer = item instanceof Container ? item : new Container(result);
                 } else {
-                    // apply any offset values
-                    result.set(result.point.add(container.point));
-                    sprites.push(result);
+                    const resultAsArray = Array.isArray(result) ? result : [result];
+                    childContainer = new Container(resultAsArray);
                 }
+                childContainer.set(container.point);
+                return sprites.concat(this.#hydrateBuffer(childContainer));
+            }
+
+            const result = SpriteFactory.make(item);
+            if (Array.isArray(result)) {
+                sprites.push(
+                    ...result.map((sprite) => {
+                        sprite.set(sprite.point.add(container.point));
+                        return sprite;
+                    })
+                );
+            } else {
+                result.set(result.point.add(container.point));
+                sprites.push(result);
             }
 
             return sprites;
@@ -70,7 +83,6 @@ export class Canvas {
 
         sprites.forEach((sprite) => {
             const spriteRows = typeof sprite.content === "string" ? sprite.content.split("\n") : [sprite.content];
-
             spriteRows.forEach((row, rowIndex) => {
                 Array.from(String(row)).forEach((character, cellIndex) => {
                     const xPos = Math.round(sprite.x) + cellIndex;
