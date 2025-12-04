@@ -90,9 +90,9 @@ ticker.add((delta) => {
     scoreText.text = `\nMy score is: ${apple.numCollected}\n`;
 
     const buffer = new Container();
+    buffer.add(hud);
     buffer.add(player);
     buffer.add(apple);
-    buffer.add(hud);
 
     // if (player.isAlive === false) {
     //     skull.next();

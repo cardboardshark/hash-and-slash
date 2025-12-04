@@ -1,6 +1,7 @@
 import { DIRECTION_MAP } from "@/core/core-constants";
 import type { KeyboardController } from "@/core/keyboard-controller";
 import { Container } from "@/core/primitives/container";
+import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
 import { Ray } from "@/core/primitives/ray";
@@ -24,6 +25,10 @@ export class Player implements RenderableEntity {
     fill = "█";
     isAlive = true;
     allowReversing;
+    collissionRay?: RayCaster;
+
+    debugRay?: Ray;
+    debugCollisions?: RayCaster;
 
     constructor({ initialPosition, initialVector = { x: 0, y: 0 }, initialSpeed = 1, maxTrailLength, controller }: PlayerOptions) {
         this.position = new Point(initialPosition);
@@ -71,17 +76,20 @@ export class Player implements RenderableEntity {
         if (this.vector.equals({ x: 0, y: 0 }) === false) {
             const playerVectorWithSpeed = this.vector.multiplyScalar(this.speed);
 
-            // Fire a ray from the current position to test collissions
-            const pathRay = new Ray(this.position, this.vector, this.speed);
+            // Fire a ray from the current position to test collisions
+            const playerCollisionRay = new Ray(this.position, this.vector, this.speed);
+            this.collissionRay = new RayCaster(playerCollisionRay, boundary);
 
             // BORKED
-            // const trail = new PolyLine([this.position, ...this.history]);
-            // const obstacles = [boundary, trail];
-            const pathIntersection = new RayCaster(pathRay, boundary);
+            // Intersections from the debug ray do no prevent movement.
+            const trail = new PolyLine([this.position, ...this.history]);
+            this.debugRay = new Ray(this.position, this.vector, 10);
+            this.debugRay.line.stroke = "-";
+            this.debugCollisions = new RayCaster(this.debugRay, [boundary, trail]);
 
-            if (pathIntersection.hasIntersection) {
-                if (pathIntersection.firstIntersection?.point) {
-                    const safePoint = new Point(pathIntersection.firstIntersection.point).subtract(this.vector);
+            if (this.collissionRay.hasIntersection) {
+                if (this.collissionRay.firstIntersection?.point) {
+                    const safePoint = new Point(this.collissionRay.firstIntersection.point).subtract(this.vector);
                     this.set(safePoint);
 
                     // oh no!!
@@ -94,9 +102,27 @@ export class Player implements RenderableEntity {
     }
 
     toRenderable() {
+        const container = new Container();
         const trail = new PolyLine([this.position, ...this.history]);
         trail.stroke = "-";
+        container.add(trail);
 
-        return new Container([trail, new Sprite(this.position, this.fill)]);
+        if (this.debugRay) {
+            container.add(this.debugRay.line);
+
+            this.debugCollisions?.intersections?.forEach((intersection) => {
+                if (intersection.face) {
+                    const line = new Line(intersection.face);
+                    line.stroke = "X";
+                    container.add(line);
+
+                    container.add(new Sprite(intersection.point, "*"));
+                }
+            });
+        }
+
+        container.add(new Sprite(this.position, this.fill));
+
+        return container;
     }
 }
