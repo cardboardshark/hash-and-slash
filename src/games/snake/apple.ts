@@ -24,8 +24,9 @@ export class Apple implements RenderableEntity {
 
     generateApple(liveArea: Rectangle, playerPath: PolyLine) {
         const liveAreaPoints = [];
-        for (let y = liveArea.topLeft.y; y < liveArea.bottomRight.y; y += 1) {
-            for (let x = liveArea.topLeft.x; x < liveArea.bottomRight.x; x += 1) {
+        console.log();
+        for (let y = liveArea.topLeft.y + 1; y < liveArea.bottomRight.y - 1; y += 1) {
+            for (let x = liveArea.topLeft.x + 1; x < liveArea.bottomRight.x - 1; x += 1) {
                 liveAreaPoints.push({ x, y });
             }
         }

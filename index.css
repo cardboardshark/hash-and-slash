@@ -43,8 +43,8 @@ body {
     outline: 1px solid #fff;
     font-family: monospace;
     font-size: var(--character-size);
-    letter-spacing: var(--character-size);
-    line-height: 150%;
+    letter-spacing: calc(var(--character-size) - 3px);
+    line-height: 170%;
     user-select: none;
     animation: screenScroll 3s linear infinite;
     filter: drop-shadow(0 0 3px #fff);

@@ -5,7 +5,6 @@ import { KeyboardController } from "@/core/keyboard-controller";
 import { Container } from "@/core/primitives/container";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
-import { PolyLine } from "@/core/primitives/poly-line";
 import { Ray } from "@/core/primitives/ray";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Sprite } from "@/core/primitives/sprite";
@@ -13,6 +12,7 @@ import { Text } from "@/core/primitives/text";
 import { RayCaster } from "@/core/ray-caster";
 import { Ticker } from "@/core/ticker";
 import { Apple } from "@/games/snake/apple";
+import { PipeBox } from "@/games/snake/pipe-box";
 import { Player } from "@/games/snake/player";
 import { Trail } from "@/games/snake/trail";
 
@@ -27,7 +27,6 @@ const config = {
         width: 20,
         height: 20,
         element: document.querySelector<HTMLElement>(".canvas"),
-        fill: "≍",
     },
 };
 
@@ -39,9 +38,7 @@ const input = new KeyboardController();
 // GAME STATE
 let initialPlayerPosition = new Point(3, 3);
 
-const liveArea = new Rectangle({ x: -1, y: -1 }, { x: config.canvas.width, y: config.canvas.height - 5 });
-liveArea.fill = " ";
-liveArea.stroke = "#";
+const liveArea = new PipeBox({ x: 0, y: 0 }, { x: config.canvas.width - 1, y: config.canvas.height - 6 });
 
 const player = new Player(initialPlayerPosition);
 const playerTrail = new Trail(player, 20);
@@ -76,7 +73,7 @@ ticker.add((delta) => {
     player.tick(delta, input);
 
     const playerPathRay = new Ray(player.previousPosition, player.vector, player.speed);
-    const playerPathIntersection = new RayCaster(playerPathRay, liveArea);
+    const playerPathIntersection = new RayCaster(playerPathRay, liveArea.rectangle);
     if (playerPathIntersection.hasIntersection) {
         if (playerPathIntersection.firstIntersection?.point) {
             const safePoint = new Point(playerPathIntersection.firstIntersection.point).subtract(player.vector);
@@ -101,7 +98,7 @@ ticker.add((delta) => {
 
     if (apple.canPlayerClaimApple(player)) {
         apple.claimApple();
-        apple.generateApple(liveArea, playerTrail.toRenderable());
+        apple.generateApple(liveArea.rectangle, playerTrail.toRenderable());
     }
 
     buffer.add(apple);
