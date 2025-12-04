@@ -1,7 +1,7 @@
 import { SpriteFactory } from "@/core/sprite-factory";
 import { BLANK_CHARACTER } from "@/core/core-constants";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { isContainerLike, isRenderableEntity, isShapeLike, isSpriteLike, type Renderable, type SpriteLike } from "@/core/types";
+import { isContainerLike, isRenderableEntity, isSpriteLike, type SpriteLike } from "@/core/types";
 import { Container } from "@/core/primitives/container";
 import { Sprite } from "@/core/primitives/sprite";
 

@@ -5,6 +5,7 @@ import type { PointLike, RenderableEntity } from "@/core/types";
 
 export class PipeBox implements RenderableEntity {
     rectangle: Rectangle;
+    fill = BLANK_CHARACTER;
 
     constructor(topLeft: PointLike, bottomRight: PointLike) {
         this.rectangle = new Rectangle(topLeft, bottomRight);
@@ -35,7 +36,7 @@ export class PipeBox implements RenderableEntity {
                 } else if (dimensions.top === y || dimensions.bottom === y) {
                     content += "═";
                 } else {
-                    content += BLANK_CHARACTER;
+                    content += this.fill;
                 }
             }
             content += "\n";

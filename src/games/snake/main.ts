@@ -1,31 +1,32 @@
 import { Canvas } from "@/core/canvas";
-import { INPUT } from "@/core/core-constants";
 import { DisplayKeyboardInput } from "@/core/debug";
 import { KeyboardController } from "@/core/keyboard-controller";
 import { Container } from "@/core/primitives/container";
-import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
-import { Ray } from "@/core/primitives/ray";
+import { PolyLine } from "@/core/primitives/poly-line";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { Sprite } from "@/core/primitives/sprite";
+import { SpriteSheet } from "@/core/primitives/spritesheet";
 import { Text } from "@/core/primitives/text";
-import { RayCaster } from "@/core/ray-caster";
 import { Ticker } from "@/core/ticker";
+import { AssetUtil } from "@/core/utils/asset-util";
 import { Apple } from "@/games/snake/apple";
 import { PipeBox } from "@/games/snake/pipe-box";
 import { Player } from "@/games/snake/player";
-import { Trail } from "@/games/snake/trail";
 
 /**
  * TODO:
  * collission detection does not detect 1-height lines on same axis ( ie o -> o )
  * Input is not detected frequently enough
+ *
+ * Separate input controller from ticker logic
+ * Player listens for input, sets planned movement but does not execute movement until tick
+ *
  */
 const config = {
-    fps: 10,
+    fps: 15,
     canvas: {
-        width: 20,
-        height: 20,
+        width: 30,
+        height: 30,
         element: document.querySelector<HTMLElement>(".canvas"),
     },
 };
@@ -35,73 +36,68 @@ canvas.debugMode = true;
 const ticker = new Ticker(config.fps);
 const input = new KeyboardController();
 
-// GAME STATE
-let initialPlayerPosition = new Point(3, 3);
-
-const liveArea = new PipeBox({ x: 0, y: 0 }, { x: config.canvas.width - 1, y: config.canvas.height - 6 });
-
-const player = new Player(initialPlayerPosition);
-const playerTrail = new Trail(player, 20);
+/**
+ * Entities
+ */
+const player = new Player({ initialPosition: new Point(3, 3), controller: input });
 const apple = new Apple({ x: 5, y: 5 });
 
-let isPaused = false;
+/**
+ * HUD
+ */
+const scoreBox = new Rectangle({ x: 0, y: 0 }, new Point(config.canvas.width, 5));
+scoreBox.fill = "█";
+
+const scoreText = new Text(new Point(scoreBox.topLeft).add({ x: 1, y: 1 }), `\nMy score is: ${apple.numCollected}\n`, {
+    width: config.canvas.width - 2,
+    align: "center",
+    fill: " ",
+});
+
+const liveArea = new PipeBox({ x: 0, y: 0 }, { x: config.canvas.width - 1, y: config.canvas.height - 6 });
+const scoreContainer = new Container([scoreBox, scoreText]);
+scoreContainer.set(0, config.canvas.height - 5);
+
+const hud = new Container([liveArea, scoreContainer]);
+
+/**
+ * Death Screen
+ */
+const skull = new SpriteSheet(new Point(2, 3), {
+    content: AssetUtil.load("snake/skull"),
+    frameWidth: 10,
+    frameHeight: 6,
+    numFrames: 10,
+});
+const skullBox = new PipeBox(new Point(0, 0), new Point(11, 9));
+skullBox.fill = " ";
+const skullContainer = new Container([skullBox, new Text(new Point(2, 1), "u = dead", {}), skull]);
+skullContainer.set(10, 6);
+
+/**
+ * Game Loop
+ */
 ticker.add((delta) => {
-    if (input.keys[INPUT.SPACE].pressed) {
-        if (isPaused) {
-            isPaused = false;
-        } else {
-            isPaused = true;
-        }
-    }
-    if (isPaused) {
-        return;
-    }
-    const buffer = new Container();
-
-    buffer.add(liveArea);
-    const scoreBox = new Rectangle(new Point(0, 0), new Point(config.canvas.width, 4));
-    scoreBox.fill = "█";
-
-    const group = new Container([
-        scoreBox,
-        new Text(new Point(1, 1), `\nMy score is: ${apple.numCollected}\n`, { width: config.canvas.width - 2, align: "center", fill: " " }),
-    ]);
-    group.set(0, config.canvas.height - 5);
-    buffer.add(group);
-
-    // Player code
-    player.tick(delta, input);
-
-    const playerPathRay = new Ray(player.previousPosition, player.vector, player.speed);
-    const playerPathIntersection = new RayCaster(playerPathRay, liveArea.rectangle);
-    if (playerPathIntersection.hasIntersection) {
-        if (playerPathIntersection.firstIntersection?.point) {
-            const safePoint = new Point(playerPathIntersection.firstIntersection.point).subtract(player.vector);
-            player.bounceTo(safePoint);
-        }
-
-        playerPathIntersection.intersections?.forEach((intersection) => {
-            if (intersection.face) {
-                const intersectionFace = new Line(intersection.face);
-                intersectionFace.stroke = "X";
-                buffer.add(intersectionFace);
-            }
-
-            buffer.add(new Sprite(intersection.point, "*"));
-        });
-    }
-
-    playerTrail.tick(delta);
-
-    buffer.add(playerTrail);
-    buffer.add(player);
+    // if (player.isAlive) {
+    player.move(liveArea.rectangle);
+    // }
 
     if (apple.canPlayerClaimApple(player)) {
         apple.claimApple();
-        apple.generateApple(liveArea.rectangle, playerTrail.toRenderable());
+        apple.generateApple(liveArea.rectangle, new PolyLine([]));
     }
 
+    scoreText.text = `\nMy score is: ${apple.numCollected}\n`;
+
+    const buffer = new Container();
+    buffer.add(player);
     buffer.add(apple);
+    buffer.add(hud);
+
+    // if (player.isAlive === false) {
+    //     skull.next();
+    //     buffer.add(skullContainer);
+    // }
 
     canvas.draw(buffer);
 });

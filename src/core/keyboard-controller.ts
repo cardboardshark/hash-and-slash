@@ -1,12 +1,7 @@
 import { INPUT, DIRECTION_MAP } from "@/core/core-constants";
 import { Point } from "./primitives/point";
-
-type KeyMapLibrary = Record<string, string>;
-interface KeyStatus {
-    pressed: boolean;
-    doubleTap: boolean;
-    timestamp?: number;
-}
+import { EventEmitter } from "@/core/event-emitter";
+import type { KeyMapLibrary, KeyStatus } from "@/core/types/input-types";
 
 // Map keyboard key codes to controller's state keys
 const keyMap = {
@@ -34,8 +29,11 @@ const DEFAULT_KEYS = Object.values(INPUT);
 // Class for handling keyboard inputs.
 export class KeyboardController {
     keys;
+    events;
 
     constructor(subscribedKeys: string[] = DEFAULT_KEYS) {
+        this.events = new EventEmitter();
+
         this.keys = subscribedKeys.reduce<Record<string, KeyStatus>>((acc, key) => {
             acc[key] = { pressed: false, doubleTap: false, timestamp: undefined };
             return acc;
@@ -46,17 +44,14 @@ export class KeyboardController {
         window.addEventListener("blur", this.reset.bind(this));
     }
 
-    get vector(): Point | undefined {
+    get vector() {
         const numKeysPressed = Object.entries(this.keys).filter(([, value]) => value.pressed).length;
         const { vector } =
             DIRECTION_MAP.find((row) => {
                 return row.keys.length === numKeysPressed && row.keys.every((key) => this.keys[key].pressed);
             }) ?? {};
 
-        if (vector) {
-            return new Point(vector);
-        }
-        return undefined;
+        return new Point(vector ?? { x: 0, y: 0 });
     }
 
     #keydownHandler(event: KeyboardEvent) {
@@ -77,8 +72,13 @@ export class KeyboardController {
             this.keys[key].timestamp = now;
         }
 
-        // Toggle on the key pressed state.
-        this.keys[key].pressed = true;
+        if (this.keys[key].pressed === false) {
+            // Toggle on the key pressed state.
+            this.keys[key].pressed = true;
+
+            // very short debounce
+            this.events.emit("keydown", { keys: this.keys, vector: this.vector }, 5);
+        }
     }
 
     #keyupHandler(event: KeyboardEvent) {
@@ -101,6 +101,9 @@ export class KeyboardController {
         else {
             this.keys[key].timestamp = now;
         }
+
+        // very short debounce
+        this.events.emit("keyup", { keys: this.keys }, 5);
     }
 
     reset() {
