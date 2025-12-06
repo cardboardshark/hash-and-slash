@@ -55,15 +55,3 @@ export function findLineIntersection(lineA: LineLike, lineB: LineLike) {
 
     return { x, y };
 }
-
-export function findPointIntersection(needle: PointLike[], haystack: PointLike[]) {
-    const needleAsStrings = needle.map((p) => `${p.x}-${p.y}`);
-    const haystackAsStrings = haystack.map((p) => `${p.x}-${p.y}`);
-    console.log(needleAsStrings, haystackAsStrings);
-    const index = needleAsStrings.findIndex((pString) => haystackAsStrings.includes(pString));
-    if (index !== -1) {
-        console.log(index, needle.at(index));
-    }
-
-    return index !== -1 ? needle.at(index) : undefined;
-}

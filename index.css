@@ -43,7 +43,7 @@ body {
     outline: 1px solid #fff;
     font-family: monospace;
     font-size: var(--character-size);
-    letter-spacing: calc(var(--character-size) - 3px);
+    letter-spacing: calc(var(--character-size) - 2px);
     line-height: 170%;
     user-select: none;
     animation: screenScroll 3s linear infinite;
@@ -59,6 +59,14 @@ body {
     &:empty {
         display: none;
     }
+}
+
+.fps {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    padding: 10px;
+    color: #ccc;
 }
 
 @keyframes titleFlash {

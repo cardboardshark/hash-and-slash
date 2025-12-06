@@ -2,12 +2,11 @@ import { type LineLike, type PointLike, isLineLike, type BoundingBox } from "@/c
 import { Point } from "./point";
 import { calculateBoundingBox, calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
 import { Shape } from "@/core/primitives/shape";
+import { calculateRadianBetweenPoints, convertRadianToVector } from "@/core/utils/geometry-util";
 
 export class Line extends Shape implements LineLike {
     start;
     end;
-    length;
-    radian;
     boundingBox;
 
     constructor(p0: PointLike, p1: PointLike);
@@ -24,12 +23,15 @@ export class Line extends Shape implements LineLike {
             throw new Error("Invalid arguments passed to Line.");
         }
 
-        let dx = this.end.x - this.start.x,
-            dy = this.end.y - this.start.y;
-        this.length = Math.max(Math.abs(dx), Math.abs(dy));
-        this.radian = Math.atan2(this.end.y - this.start.y, this.end.x - this.start.x);
-
         this.boundingBox = Line.calculateBoundingBox(this);
+    }
+
+    get length() {
+        return this.start.distanceTo(this.end);
+    }
+
+    get radian() {
+        return calculateRadianBetweenPoints(this.start, this.end);
     }
 
     toPoints() {
@@ -47,6 +49,12 @@ export class Line extends Shape implements LineLike {
         const length = this.length;
         const resultAsRadian = this.radian + modulusedRadian;
         this.end = this.start.add(new Point({ x: Math.cos(resultAsRadian), y: Math.sin(resultAsRadian) }).multiplyScalar(length)).round();
+    }
+
+    setLength(length: number) {
+        this.end = this.start.project(convertRadianToVector(this.radian), length);
+        this.boundingBox = Line.calculateBoundingBox(this);
+        return this;
     }
 
     getNormal() {

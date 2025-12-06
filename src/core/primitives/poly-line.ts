@@ -2,28 +2,67 @@ import { type PolygonLike, type PointLike, isPolygonLike, type BoundingBox, type
 import { Line } from "./line";
 import { calculateBoundingBox } from "@/core/utils/math-utils";
 import { Shape } from "@/core/primitives/shape";
+import { Point } from "@/core/primitives/point";
+import { convertRadianToVector, calculateVectorBetweenPoints, trimPointsToLength } from "@/core/utils/geometry-util";
 
 export class PolyLine extends Shape implements PolyLineLike {
-    points: PointLike[];
-    lines: Line[];
+    points: Point[];
+    lines: Line[] = [];
     closed: false = false;
     boundingBox;
-    length;
+    length = 0;
 
     constructor(shape: PolygonLike);
     constructor(points: PointLike[]);
     constructor(shapeOrPoints: PolygonLike | PointLike[] = []) {
         super();
         if (isPolygonLike(shapeOrPoints)) {
-            this.points = shapeOrPoints.points;
+            this.points = shapeOrPoints.points.map((p) => new Point(p));
         } else {
-            this.points = shapeOrPoints;
+            this.points = shapeOrPoints.map((p) => new Point(p));
         }
 
-        this.lines = [];
         this.#calculateLines();
-        this.length = this.lines.reduce((sum, l) => sum + l.length, 0);
         this.boundingBox = PolyLine.calculateBoundingBox(this);
+    }
+
+    clone() {
+        return new PolyLine(this.points);
+    }
+
+    add(point: PointLike) {
+        this.points.push(new Point(point));
+        this.#calculateLines();
+        this.boundingBox = PolyLine.calculateBoundingBox(this);
+    }
+
+    prepend(point: PointLike) {
+        this.points.unshift(new Point(point));
+        this.#calculateLines();
+        this.boundingBox = PolyLine.calculateBoundingBox(this);
+    }
+
+    set(index: number, point: PointLike) {
+        this.points.splice(index, 1, new Point(point));
+    }
+
+    delete(index: number) {
+        this.points.splice(index, 1);
+    }
+
+    trim(length: number) {
+        this.points = trimPointsToLength(this.points, length);
+        this.#calculateLines();
+        this.boundingBox = PolyLine.calculateBoundingBox(this);
+
+        return this;
+    }
+
+    get last() {
+        if (this.points.length === 0) {
+            throw new Error("Polygon does not have any points.");
+        }
+        return this.points[this.points.length - 1];
     }
 
     #calculateLines() {
@@ -36,27 +75,7 @@ export class PolyLine extends Shape implements PolyLineLike {
                 this.lines.push(line);
             }
         }
-    }
-
-    add(point: PointLike) {
-        this.points.push(point);
-        this.#calculateLines();
         this.length = this.lines.reduce((sum, l) => sum + l.length, 0);
-        this.boundingBox = PolyLine.calculateBoundingBox(this);
-    }
-
-    prepend(point: PointLike) {
-        this.points.unshift(point);
-        this.#calculateLines();
-        this.length = this.lines.reduce((sum, l) => sum + l.length, 0);
-        this.boundingBox = PolyLine.calculateBoundingBox(this);
-    }
-
-    get last() {
-        if (this.points.length === 0) {
-            throw new Error("Polygon does not have any points.");
-        }
-        return this.points[this.points.length - 1];
     }
 
     static calculateBoundingBox(polyLine: PolyLineLike): BoundingBox {

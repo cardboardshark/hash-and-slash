@@ -44,6 +44,7 @@ export class KeyboardController {
         window.addEventListener("blur", this.reset.bind(this));
     }
 
+    // 9 possible vectors
     get vector() {
         const numKeysPressed = Object.entries(this.keys).filter(([, value]) => value.pressed).length;
         const { vector } =
@@ -51,7 +52,17 @@ export class KeyboardController {
                 return row.keys.length === numKeysPressed && row.keys.every((key) => this.keys[key].pressed);
             }) ?? {};
 
-        return new Point(vector ?? { x: 0, y: 0 });
+        return new Point(vector ?? Point.ZeroZero);
+    }
+
+    // 4 possible vectors
+    get cardinalVector() {
+        const { vector } =
+            DIRECTION_MAP.find((row) => {
+                return row.keys.length === 1 && row.keys.every((key) => this.keys[key].pressed);
+            }) ?? {};
+
+        return new Point(vector ?? Point.ZeroZero);
     }
 
     #keydownHandler(event: KeyboardEvent) {
@@ -103,7 +114,7 @@ export class KeyboardController {
         }
 
         // very short debounce
-        this.events.emit("keyup", { keys: this.keys }, 5);
+        this.events.emit("keyup", { keys: this.keys });
     }
 
     reset() {

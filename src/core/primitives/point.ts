@@ -1,8 +1,11 @@
 import type { PointLike, LineLike } from "@/core/types";
+import { inRange } from "lodash";
 
 export class Point {
     x: number;
     y: number;
+
+    static ZeroZero = { x: 0, y: 0 } as const;
 
     constructor(x: number, y: number);
     constructor(point: PointLike);
@@ -24,14 +27,24 @@ export class Point {
         this.y = y;
     }
 
+    isZeroZero() {
+        return this.x == 0 && this.y === 0;
+    }
+
     add(point: PointLike) {
         return new Point({ x: this.x + point.x, y: this.y + point.y });
     }
     subtract(point: PointLike) {
         return new Point({ x: this.x - point.x, y: this.y - point.y });
     }
+    ceil() {
+        return new Point(Math.ceil(this.x), Math.ceil(this.y));
+    }
+    floor() {
+        return new Point(Math.floor(this.x), Math.floor(this.y));
+    }
     round() {
-        return new Point({ x: Math.round(this.x), y: Math.round(this.y) });
+        return new Point(Math.round(this.x), Math.round(this.y));
     }
     clone() {
         return new Point(this);
@@ -46,6 +59,14 @@ export class Point {
             return false;
         }
         return this.x === point.x && this.y === point.y;
+    }
+
+    // do some rounding and fudgery to manage floating positions
+    roughlyEquals(point: PointLike, fuzziness = 0.5) {
+        if (!point) {
+            return false;
+        }
+        return inRange(point.x, this.x - fuzziness, this.x + fuzziness) && inRange(point.y, this.y - fuzziness, this.y + fuzziness);
     }
 
     normalize() {

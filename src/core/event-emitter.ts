@@ -28,7 +28,7 @@ export class EventEmitter<E extends string> {
         this.#listeners.get(event)?.delete(callback);
     }
 
-    emit<P>(event: E, payload: P, debounceMilliseconds: number) {
+    emit<P>(event: E, payload: P, debounceMilliseconds?: number) {
         const callbacks = Array.from(this.#listeners.get(event)?.values() ?? []);
 
         callbacks.forEach((callback) => {

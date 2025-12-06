@@ -2,6 +2,7 @@ import { Canvas } from "@/core/canvas";
 import { DisplayKeyboardInput } from "@/core/debug";
 import { KeyboardController } from "@/core/keyboard-controller";
 import { Container } from "@/core/primitives/container";
+import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
 import { Rectangle } from "@/core/primitives/rectangle";
@@ -9,6 +10,7 @@ import { SpriteSheet } from "@/core/primitives/spritesheet";
 import { Text } from "@/core/primitives/text";
 import { Ticker } from "@/core/ticker";
 import { AssetUtil } from "@/core/utils/asset-util";
+import { trimPointsToLength } from "@/core/utils/geometry-util";
 import { Apple } from "@/games/snake/apple";
 import { PipeBox } from "@/games/snake/pipe-box";
 import { Player } from "@/games/snake/player";
@@ -23,7 +25,7 @@ import { Player } from "@/games/snake/player";
  *
  */
 const config = {
-    fps: 15,
+    fps: 30,
     canvas: {
         width: 30,
         height: 30,
@@ -33,13 +35,13 @@ const config = {
 
 const canvas = new Canvas(config.canvas);
 canvas.debugMode = true;
-const ticker = new Ticker(config.fps);
+const ticker = new Ticker();
 const input = new KeyboardController();
 
 /**
  * Entities
  */
-const player = new Player({ initialPosition: new Point(3, 3), controller: input });
+const player = new Player({ initialPosition: new Point(3, 3) });
 const apple = new Apple({ x: 5, y: 5 });
 
 /**
@@ -79,7 +81,7 @@ skullContainer.set(10, 6);
  */
 ticker.add((delta) => {
     // if (player.isAlive) {
-    player.move(liveArea.rectangle);
+    player.move(delta, input.cardinalVector, apple.numCollected, liveArea.rectangle);
     // }
 
     if (apple.canPlayerClaimApple(player)) {
@@ -100,10 +102,15 @@ ticker.add((delta) => {
     // }
 
     canvas.draw(buffer);
+    // ticker.paused = true;
 });
 
 // debug helper
 ticker.add(DisplayKeyboardInput(input));
 
+const FPSDom = document.querySelector(".fps");
+if (FPSDom) {
+    FPSDom.textContent = `FPS: ${ticker.FPS}`;
+}
+
 console.log("-- Starting! --");
-ticker.start();

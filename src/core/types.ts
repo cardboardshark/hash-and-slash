@@ -82,3 +82,11 @@ export interface BoundingBox {
     width: number;
     height: number;
 }
+
+export interface TickerDelta {
+    deltaMS: number;
+    deltaTime: number;
+    elapsedMS: number;
+    lastTime: number;
+    speed: number;
+}

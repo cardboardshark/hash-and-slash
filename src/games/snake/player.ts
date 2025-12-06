@@ -1,91 +1,78 @@
-import { DIRECTION_MAP } from "@/core/core-constants";
-import type { KeyboardController } from "@/core/keyboard-controller";
 import { Container } from "@/core/primitives/container";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
-import { PolyLine } from "@/core/primitives/poly-line";
 import { Ray } from "@/core/primitives/ray";
 import { Sprite } from "@/core/primitives/sprite";
 import { RayCaster } from "@/core/ray-caster";
-import type { PointLike, RectangleLike, RenderableEntity } from "@/core/types";
-import type { InputEvent } from "@/core/types/input-types";
+import type { PointLike, RectangleLike, RenderableEntity, TickerDelta } from "@/core/types";
+import { Trail } from "@/games/snake/trail";
 interface PlayerOptions {
     initialPosition: PointLike;
     initialVector?: PointLike;
     initialSpeed?: number;
-    maxTrailLength?: number;
-    controller: KeyboardController;
 }
 export class Player implements RenderableEntity {
+    static InitialSpeed = 1;
+    static InitialMaxTrailLength = 5;
+    // toggle to allow player to turn back
+    allowReversing = false;
+
     position;
     vector;
     speed;
-    maxTrailLength;
-    history: PointLike[] = [];
+    trail;
     fill = "█";
     isAlive = true;
-    allowReversing;
+
     collissionRay?: RayCaster;
 
     debugRay?: Ray;
     debugCollisions?: RayCaster;
 
-    constructor({ initialPosition, initialVector = { x: 0, y: 0 }, initialSpeed = 1, maxTrailLength, controller }: PlayerOptions) {
+    constructor({ initialPosition, initialVector = { x: 0, y: 0 }, initialSpeed = Player.InitialSpeed }: PlayerOptions) {
         this.position = new Point(initialPosition);
         this.vector = new Point(initialVector);
         this.speed = initialSpeed;
-        this.maxTrailLength = maxTrailLength;
 
-        // toggle to allow player to turn back
-        this.allowReversing = true;
-
-        // listen for input events
-        controller.events.on<InputEvent>("keydown", (e) => {
-            // determine direction
-            const numKeysPressed = Object.entries(e.keys).filter(([, value]) => value.pressed).length;
-            const { vector } =
-                DIRECTION_MAP.find((row) => {
-                    return row.keys.length === numKeysPressed && row.keys.every((key) => e.keys[key].pressed);
-                }) ?? {};
-            const inputVector = new Point(vector ?? { x: 0, y: 0 });
-
-            // set local vector if one is found
-            const hasNewInput = inputVector.equals(this.vector) === false;
-            const isDeadStick = inputVector.equals({ x: 0, y: 0 });
-            const reverseVector = this.position.subtract(this.vector.add(this.position));
-            const isReverse = isDeadStick === false && this.allowReversing === false && inputVector.equals(reverseVector);
-            if (isReverse === false && isDeadStick === false) {
-                // record a change in direction for trail purposes
-                if (hasNewInput && this.position.equals(this.history.at(0)) === false) {
-                    this.history.unshift(this.position);
-                }
-
-                this.vector = inputVector;
-            }
-
-            this.fill = isReverse ? "X" : "█";
-        });
+        this.trail = new Trail(() => this.position.round(), Player.InitialMaxTrailLength);
     }
 
     set(point: PointLike) {
         this.position = new Point(point);
     }
 
-    move(boundary: RectangleLike) {
+    move(delta: TickerDelta, vector: Point, numApplesCollected: number, boundary: RectangleLike) {
+        this.speed = 1 + numApplesCollected / 5;
+        this.trail.maxLength = Player.InitialMaxTrailLength + numApplesCollected * 2;
+
+        const hasNewInput = vector.equals(this.vector) === false;
+        const isDeadStick = vector.isZeroZero();
+        const reverseVector = this.position.subtract(this.vector.add(this.position));
+        const isReverse = isDeadStick === false && this.allowReversing === false && vector.equals(reverseVector);
+        if (isReverse === false && isDeadStick === false) {
+            // record a change in direction for trail purposes
+            const isSamePosition = this.trail.points.at(0) ? this.position.roughlyEquals(this.trail.points[0]) : false;
+            if (hasNewInput && isSamePosition === false) {
+                this.trail.add(this.position.round());
+            }
+
+            this.vector = vector;
+        }
+
         // is the user moving?
         if (this.vector.equals({ x: 0, y: 0 }) === false) {
-            const playerVectorWithSpeed = this.vector.multiplyScalar(this.speed);
+            const playerVectorWithSpeed = this.vector.multiplyScalar(this.speed * delta.deltaMS);
 
+            const spaceInFrontOfPlayer = this.position.add(this.vector).round();
             // Fire a ray from the current position to test collisions
             const playerCollisionRay = new Ray(this.position, this.vector, this.speed);
-            this.collissionRay = new RayCaster(playerCollisionRay, boundary);
+            this.collissionRay = new RayCaster(playerCollisionRay, [boundary]);
 
             // BORKED
-            // Intersections from the debug ray do no prevent movement.
-            const trail = new PolyLine([this.position, ...this.history]);
-            this.debugRay = new Ray(this.position, this.vector, 10);
+            // Intersections from the debug ray do not prevent movement.
+            this.debugRay = new Ray(spaceInFrontOfPlayer, this.vector, this.speed * delta.deltaMS - 1);
             this.debugRay.line.stroke = "-";
-            this.debugCollisions = new RayCaster(this.debugRay, [boundary, trail]);
+            this.debugCollisions = new RayCaster(this.debugRay, this.trail.line);
 
             if (this.collissionRay.hasIntersection) {
                 if (this.collissionRay.firstIntersection?.point) {
@@ -98,13 +85,24 @@ export class Player implements RenderableEntity {
             } else {
                 this.set(this.position.add(playerVectorWithSpeed));
             }
+            if (this.debugCollisions.hasIntersection) {
+                if (this.debugCollisions.firstIntersection?.point) {
+                    const safePoint = new Point(this.debugCollisions.firstIntersection.point).subtract(this.vector);
+                    this.set(safePoint);
+
+                    // oh no!!
+                    this.isAlive = false;
+                }
+            }
         }
     }
 
     toRenderable() {
         const container = new Container();
-        const trail = new PolyLine([this.position, ...this.history]);
+
+        const trail = this.trail.line;
         trail.stroke = "-";
+
         container.add(trail);
 
         if (this.debugRay) {
