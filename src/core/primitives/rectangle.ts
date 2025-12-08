@@ -1,50 +1,48 @@
-import { isRectangleLike, type BoundingBox, type PointLike, type RectangleLike } from "@/core/types";
-import { Line } from "./line";
+import { PixelGrid } from "@/core/pipeline/pixel-grid";
+import { Line } from "@/core/primitives/line";
 import { Shape } from "@/core/primitives/shape";
-import { calculateBoundingBox } from "@/core/utils/math-utils";
-import { Point } from "@/core/primitives/point";
+import { PointLike } from "@/core/types/primitive-types";
 
-export class Rectangle extends Shape implements RectangleLike {
-    topLeft;
-    bottomRight;
-    lines;
-    boundingBox;
+export class Rectangle extends Shape {
+    x;
+    y;
+    width;
+    height;
 
-    constructor(p0: RectangleLike);
-    constructor(p0: PointLike, p1: PointLike);
-    constructor(p0OrRectangleLike: PointLike | RectangleLike, p1?: PointLike) {
+    constructor(point: PointLike, width: number, height: number) {
         super();
-        if (isRectangleLike(p0OrRectangleLike)) {
-            this.topLeft = p0OrRectangleLike.topLeft;
-            this.bottomRight = p0OrRectangleLike.bottomRight;
-        } else if (p1 !== undefined) {
-            this.topLeft = p0OrRectangleLike;
-            this.bottomRight = p1;
-        } else {
-            throw new Error("Invalid arguments passed to Rectangle");
-        }
 
-        this.boundingBox = Rectangle.calculateBoundingBox(this);
+        this.x = point.x;
+        this.y = point.y;
+        this.width = width;
+        this.height = height;
+    }
 
-        this.lines = [
+    get lines() {
+        return [
             // top
-            new Line(new Point(this.boundingBox.left, this.boundingBox.top), new Point(this.boundingBox.right, this.boundingBox.top)),
+            new Line(this.point, this.point.add({ x: this.width, y: 0 })),
             // right
-            new Line(new Point(this.boundingBox.right, this.boundingBox.top), new Point(this.boundingBox.right, this.boundingBox.bottom)),
+            new Line(this.point.add({ x: this.width, y: 0 }), this.point.add({ x: this.width, y: this.height })),
             // bottom
-            new Line(new Point(this.boundingBox.left, this.boundingBox.bottom), new Point(this.boundingBox.right, this.boundingBox.bottom)),
+            new Line(this.point.add({ x: 0, y: this.height }), this.point.add({ x: this.width, y: this.height })),
             // left
-            new Line(new Point(this.boundingBox.left, this.boundingBox.top), new Point(this.boundingBox.left, this.boundingBox.bottom)),
+            new Line(this.point, this.point.add({ x: 0, y: this.height })),
         ];
     }
 
-    contains(point: PointLike) {
-        const isInXRange = point.x >= this.topLeft.x && point.x < this.bottomRight.x;
-        const isInYRange = point.y >= this.topLeft.y && point.y < this.bottomRight.y;
-        return isInXRange && isInYRange;
+    toPixels() {
+        return new PixelGrid().fill(this.boundingBox.width, this.boundingBox.height, "r");
     }
 
-    static calculateBoundingBox(rectangle: RectangleLike): BoundingBox {
-        return calculateBoundingBox([rectangle.topLeft, rectangle.bottomRight]);
+    get boundingBox() {
+        return {
+            left: this.point.x,
+            right: this.point.x + this.width,
+            bottom: this.point.y + this.height,
+            top: this.point.y,
+            width: this.width,
+            height: this.height,
+        };
     }
 }

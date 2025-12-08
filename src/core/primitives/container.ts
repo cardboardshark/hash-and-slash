@@ -1,5 +1,5 @@
-import { isContainerLike, isPointLike, type ContainerLike, type PointLike, type Renderable } from "@/core/types";
 import { Point } from "@/core/primitives/point";
+import { Renderable, PointLike, isPointLike } from "@/core/types/primitive-types";
 
 /**
  * Group shapes or sprites together. All children will be positioned relative to the Container's x and y coord.
@@ -9,17 +9,8 @@ export class Container {
     x = 0;
     y = 0;
 
-    constructor(container?: ContainerLike);
-    constructor(initial?: Renderable[]);
-    constructor(initialOrContainer?: ContainerLike | Renderable[]) {
-        if (isContainerLike(initialOrContainer)) {
-            this.children = initialOrContainer.children;
-            this.set(initialOrContainer.x, initialOrContainer.y);
-        } else if (Array.isArray(initialOrContainer)) {
-            this.children = initialOrContainer;
-        } else {
-            this.children = [];
-        }
+    constructor(initial: Renderable[] = []) {
+        this.children = initial;
     }
 
     add(value: Renderable) {

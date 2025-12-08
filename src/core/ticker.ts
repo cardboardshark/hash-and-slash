@@ -1,4 +1,4 @@
-import type { TickerDelta } from "@/core/types";
+import { TickerDelta } from "@/core/types/ticker-types";
 
 type Listener = (delta: TickerDelta) => void;
 

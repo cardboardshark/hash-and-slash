@@ -37,9 +37,9 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     --character-size: calc((300 / var(--width)) * 1px);
-    padding-left: 15px;
+    /* padding-left: 15px;
     padding-top: 10px;
-    padding-bottom: 5px;
+    padding-bottom: 5px; */
     outline: 1px solid #fff;
     font-family: monospace;
     font-size: var(--character-size);

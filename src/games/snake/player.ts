@@ -2,9 +2,12 @@ import { Container } from "@/core/primitives/container";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { Ray } from "@/core/primitives/ray";
+import { Rectangle } from "@/core/primitives/rectangle";
 import { Sprite } from "@/core/primitives/sprite";
+import { Text } from "@/core/primitives/text";
 import { RayCaster } from "@/core/ray-caster";
-import type { PointLike, RectangleLike, RenderableEntity, TickerDelta } from "@/core/types";
+import type { PointLike, RenderableEntity, RectangleLike } from "@/core/types/primitive-types";
+import type { TickerDelta } from "@/core/types/ticker-types";
 import { Trail } from "@/games/snake/trail";
 interface PlayerOptions {
     initialPosition: PointLike;
@@ -35,15 +38,18 @@ export class Player implements RenderableEntity {
         this.speed = initialSpeed;
 
         this.trail = new Trail(() => this.position.round(), Player.InitialMaxTrailLength);
+        this.trail.add(initialPosition);
     }
 
     set(point: PointLike) {
         this.position = new Point(point);
     }
 
-    move(delta: TickerDelta, vector: Point, numApplesCollected: number, boundary: RectangleLike) {
+    move(delta: TickerDelta, vector: Point, numApplesCollected: number, boundary: Rectangle) {
         this.speed = 1 + numApplesCollected / 5;
         this.trail.maxLength = Player.InitialMaxTrailLength + numApplesCollected * 2;
+
+        // console.log("matches", this.vector.equals(this.trail.vector));
 
         const hasNewInput = vector.equals(this.vector) === false;
         const isDeadStick = vector.isZeroZero();
@@ -65,7 +71,7 @@ export class Player implements RenderableEntity {
 
             const spaceInFrontOfPlayer = this.position.add(this.vector).round();
             // Fire a ray from the current position to test collisions
-            const playerCollisionRay = new Ray(this.position, this.vector, this.speed);
+            const playerCollisionRay = new Ray(this.position, this.vector, this.speed * delta.deltaMS);
             this.collissionRay = new RayCaster(playerCollisionRay, [boundary]);
 
             // BORKED
@@ -85,15 +91,18 @@ export class Player implements RenderableEntity {
             } else {
                 this.set(this.position.add(playerVectorWithSpeed));
             }
-            if (this.debugCollisions.hasIntersection) {
-                if (this.debugCollisions.firstIntersection?.point) {
-                    const safePoint = new Point(this.debugCollisions.firstIntersection.point).subtract(this.vector);
-                    this.set(safePoint);
 
-                    // oh no!!
-                    this.isAlive = false;
-                }
-            }
+            this.trail.trim();
+
+            // if (this.debugCollisions.hasIntersection) {
+            //     if (this.debugCollisions.firstIntersection?.point) {
+            //         const safePoint = new Point(this.debugCollisions.firstIntersection.point).subtract(this.vector);
+            //         this.set(safePoint);
+
+            //         // oh no!!
+            //         this.isAlive = false;
+            //     }
+            // }
         }
     }
 
@@ -110,16 +119,16 @@ export class Player implements RenderableEntity {
 
             this.debugCollisions?.intersections?.forEach((intersection) => {
                 if (intersection.face) {
-                    const line = new Line(intersection.face);
+                    const line = intersection.face;
                     line.stroke = "X";
                     container.add(line);
 
-                    container.add(new Sprite(intersection.point, "*"));
+                    container.add(new Text(intersection.point, "*"));
                 }
             });
         }
 
-        container.add(new Sprite(this.position, this.fill));
+        container.add(new Text(this.position, this.fill));
 
         return container;
     }

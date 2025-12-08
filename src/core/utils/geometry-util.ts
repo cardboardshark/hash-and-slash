@@ -1,17 +1,36 @@
 import { Point } from "@/core/primitives/point";
-import type { PointLike } from "@/core/types";
+import { Rectangle } from "@/core/primitives/rectangle";
+import { BoundingBox, PointLike } from "@/core/types/primitive-types";
 
 export function convertRadianToVector(radian: number): PointLike {
-    return { x: Math.cos(radian), y: Math.sin(radian) };
+    return { x: Math.cos(radian), y: -Math.sin(radian) };
 }
 
 export function calculateRadianBetweenPoints(p0: PointLike, p1: PointLike) {
-    return Math.atan2(p1.y - p0.y, p1.x - p0.x);
+    const dx = p1.x - p0.x;
+    const dy = p1.y - p0.y;
+
+    // Flip Y because screen coordinates grow downward
+    const result = Math.atan2(-dy, dx);
+    if (result < 0) {
+        return result + Math.PI * 2;
+    }
+    return result;
 }
 
 export function calculateVectorBetweenPoints(p0: PointLike, p1: PointLike) {
     const radian = calculateRadianBetweenPoints(p0, p1);
     return convertRadianToVector(radian);
+}
+
+export function calculateTotalDistanceBetweenPoints(points: PointLike[]) {
+    return points.reduce((total, point, i) => {
+        const nextPoint = points.at(i + 1);
+        if (nextPoint) {
+            total += Math.hypot(nextPoint.x - point.x, nextPoint.y - point.y);
+        }
+        return total;
+    }, 0);
 }
 
 export function trimPointsToLength(points: PointLike[], maxLength: number) {
@@ -21,6 +40,9 @@ export function trimPointsToLength(points: PointLike[], maxLength: number) {
     let i = 0;
     while (total < maxLength && i < clonedPoints.length) {
         const point = clonedPoints[i];
+        if (!point) {
+            throw new Error("Missing point.");
+        }
         trimmedPoints.push(point);
         const nextPoint = clonedPoints.at(i + 1);
         if (nextPoint) {
@@ -37,4 +59,39 @@ export function trimPointsToLength(points: PointLike[], maxLength: number) {
         i += 1;
     }
     return trimmedPoints;
+}
+
+export function isPointInsideRectangle(point: PointLike, shape: Rectangle) {
+    const isInXRange = point.x >= shape.point.x && point.x < shape.point.x + shape.width;
+    const isInYRange = point.y >= shape.point.y && point.y < shape.point.y + shape.height;
+    return isInXRange && isInYRange;
+}
+
+export function calculateBoundingBoxFromPoints(points: PointLike[]): BoundingBox {
+    const dimensions = points.reduce<BoundingBox>((acc, point) => {
+        acc.left ??= point.x;
+        acc.right ??= point.x;
+        acc.top ??= point.y;
+        acc.bottom ??= point.y;
+
+        if (point.x < acc.left) {
+            acc.left = point.x;
+        }
+        if (point.x > acc.right) {
+            acc.right = point.x;
+        }
+        if (point.y < acc.top) {
+            acc.top = point.y;
+        }
+        if (point.y > acc.bottom) {
+            acc.bottom = point.y;
+        }
+        return acc;
+    }, {} as BoundingBox);
+
+    return {
+        ...dimensions,
+        width: 1 + dimensions.right - dimensions.left,
+        height: 1 + dimensions.bottom - dimensions.top,
+    };
 }

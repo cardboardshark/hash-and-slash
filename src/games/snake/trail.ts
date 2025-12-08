@@ -1,20 +1,27 @@
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
-import type { PointLike } from "@/core/types";
-import { calculateVectorBetweenPoints } from "@/core/utils/geometry-util";
+import type { PointLike } from "@/core/types/primitive-types";
+import { calculateRadianBetweenPoints, calculateVectorBetweenPoints, trimPointsToLength } from "@/core/utils/geometry-util";
 
 export class Trail {
     points: Point[] = [];
     ownerPositionFn;
     maxLength;
 
-    constructor(ownerPositionFn: () => PointLike, maxLength: number) {
+    constructor(ownerPositionFn: () => Point, maxLength: number) {
         this.ownerPositionFn = ownerPositionFn;
         this.maxLength = maxLength;
     }
 
-    add(point: Point) {
-        this.points.unshift(point);
+    add(point: PointLike) {
+        this.points.unshift(new Point(point));
+    }
+
+    trim() {
+        const trimmedPoints = trimPointsToLength([this.ownerPositionFn(), ...this.points], this.maxLength);
+        trimmedPoints.splice(0, 1);
+        this.points = trimmedPoints;
+        // console.log("length", calculateTotalDistanceBetweenPoints([this.ownerPositionFn(), ...this.points]), this.points);
     }
 
     get line() {
@@ -25,7 +32,10 @@ export class Trail {
         if (this.points.length === 0) {
             return Point.ZeroZero;
         }
-        console.log(this.points, this.ownerPositionFn());
-        return calculateVectorBetweenPoints(this.points[0], this.ownerPositionFn());
+
+        const radian = calculateRadianBetweenPoints(this.points[0], this.ownerPositionFn());
+        const vector = calculateVectorBetweenPoints(this.points[0], this.ownerPositionFn());
+        // console.log([this.ownerPositionFn(), ...this.points], { radian, vector });
+        return vector;
     }
 }

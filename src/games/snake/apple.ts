@@ -1,8 +1,8 @@
 import { Point } from "@/core/primitives/point";
 import type { PolyLine } from "@/core/primitives/poly-line";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { Sprite } from "@/core/primitives/sprite";
-import type { PointLike, RenderableEntity } from "@/core/types";
+import { Text } from "@/core/primitives/text";
+import type { RenderableEntity, PointLike } from "@/core/types/primitive-types";
 import type { Player } from "@/games/snake/player";
 import { random } from "lodash";
 
@@ -24,8 +24,8 @@ export class Apple implements RenderableEntity {
 
     generateApple(liveArea: Rectangle, playerPath: PolyLine) {
         const liveAreaPoints = [];
-        for (let y = liveArea.topLeft.y + 1; y < liveArea.bottomRight.y - 1; y += 1) {
-            for (let x = liveArea.topLeft.x + 1; x < liveArea.bottomRight.x - 1; x += 1) {
+        for (let y = liveArea.boundingBox.top + 1; y < liveArea.boundingBox.bottom - 1; y += 1) {
+            for (let x = liveArea.boundingBox.left + 1; x < liveArea.boundingBox.right - 1; x += 1) {
                 liveAreaPoints.push({ x, y });
             }
         }
@@ -37,6 +37,6 @@ export class Apple implements RenderableEntity {
     }
 
     toRenderable() {
-        return new Sprite(this.position, "ó");
+        return new Text(this.position, "ó");
     }
 }

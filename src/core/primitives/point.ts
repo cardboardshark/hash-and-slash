@@ -1,4 +1,4 @@
-import type { PointLike, LineLike } from "@/core/types";
+import { PointLike } from "@/core/types/primitive-types";
 import { inRange } from "lodash";
 
 export class Point {
@@ -117,45 +117,5 @@ export class Point {
     project(vector: PointLike, magnitude: number) {
         const distance = new Point(vector).multiplyScalar(magnitude);
         return new Point(this).add(distance);
-    }
-
-    // Based on line intercept math by Paul Bourke http://paulbourke.net/geometry/pointlineplane/
-    // Determine the intersection point of two line segments
-    // Return FALSE if the lines don't intersect
-    getIntersectionWithLine(vector: PointLike, lineB: LineLike) {
-        const { x: x1, y: y1 } = this;
-        let { x: x2, y: y2 } = vector;
-        x2 += this.x;
-        y2 += this.y;
-
-        const { x: x3, y: y3 } = lineB.start;
-        const { x: x4, y: y4 } = lineB.end;
-
-        // x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number
-        // Check if none of the lines are of length 0
-        if ((x1 === x2 && y1 === y2) || (x3 === x4 && y3 === y4)) {
-            return false;
-        }
-
-        const denominator = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
-
-        // Lines are parallel
-        if (denominator === 0) {
-            return false;
-        }
-
-        const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denominator;
-        const ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denominator;
-
-        // is the intersection along the segments
-        if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
-            return false;
-        }
-
-        // Return a object with the x and y coordinates of the intersection
-        const x = x1 + ua * (x2 - x1);
-        const y = y1 + ua * (y2 - y1);
-
-        return { x, y };
     }
 }

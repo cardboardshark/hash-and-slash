@@ -18,9 +18,9 @@ export function DisplayKeyboardInput(input: KeyboardController) {
         Object.entries(input.keys).forEach(([key, state], index) => {
             if (state.pressed) {
                 if (state.doubleTap) {
-                    buffer.add(new Sprite(new Point(0, index), "██"));
+                    buffer.add(new Text(new Point(0, index), "██"));
                 } else {
-                    buffer.add(new Sprite(new Point(0, index), "█"));
+                    buffer.add(new Text(new Point(0, index), "█"));
                 }
 
                 if (state.timestamp) {

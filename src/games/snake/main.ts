@@ -1,16 +1,14 @@
 import { Canvas } from "@/core/canvas";
-import { DisplayKeyboardInput } from "@/core/debug";
 import { KeyboardController } from "@/core/keyboard-controller";
 import { Container } from "@/core/primitives/container";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { SpriteSheet } from "@/core/primitives/spritesheet";
+import { Sprite } from "@/core/primitives/sprite";
 import { Text } from "@/core/primitives/text";
 import { Ticker } from "@/core/ticker";
 import { AssetUtil } from "@/core/utils/asset-util";
-import { trimPointsToLength } from "@/core/utils/geometry-util";
 import { Apple } from "@/games/snake/apple";
 import { PipeBox } from "@/games/snake/pipe-box";
 import { Player } from "@/games/snake/player";
@@ -47,16 +45,17 @@ const apple = new Apple({ x: 5, y: 5 });
 /**
  * HUD
  */
-const scoreBox = new Rectangle({ x: 0, y: 0 }, new Point(config.canvas.width, 5));
+const scoreBox = new Rectangle(Point.ZeroZero, config.canvas.width, 5);
 scoreBox.fill = "█";
 
-const scoreText = new Text(new Point(scoreBox.topLeft).add({ x: 1, y: 1 }), `\nMy score is: ${apple.numCollected}\n`, {
+const scoreText = new Text(new Point(scoreBox.point).add({ x: 1, y: 1 }), `\nMy score is: ${apple.numCollected}\n`, {
     width: config.canvas.width - 2,
     align: "center",
     fill: " ",
 });
 
-const liveArea = new PipeBox({ x: 0, y: 0 }, { x: config.canvas.width - 1, y: config.canvas.height - 6 });
+// const liveArea = new Rectangle(Point.ZeroZero, config.canvas.width, 5);
+const liveArea = new PipeBox(Point.ZeroZero, config.canvas.width, config.canvas.height - 5);
 const scoreContainer = new Container([scoreBox, scoreText]);
 scoreContainer.set(0, config.canvas.height - 5);
 
@@ -65,13 +64,13 @@ const hud = new Container([liveArea, scoreContainer]);
 /**
  * Death Screen
  */
-const skull = new SpriteSheet(new Point(2, 3), {
+const skull = new Sprite(new Point(2, 3), {
     content: AssetUtil.load("snake/skull"),
     frameWidth: 10,
     frameHeight: 6,
     numFrames: 10,
 });
-const skullBox = new PipeBox(new Point(0, 0), new Point(11, 9));
+const skullBox = new PipeBox(new Point(0, 0), 11, 9);
 skullBox.fill = " ";
 const skullContainer = new Container([skullBox, new Text(new Point(2, 1), "u = dead", {}), skull]);
 skullContainer.set(10, 6);
@@ -92,9 +91,15 @@ ticker.add((delta) => {
     scoreText.text = `\nMy score is: ${apple.numCollected}\n`;
 
     const buffer = new Container();
+
     buffer.add(hud);
     buffer.add(player);
     buffer.add(apple);
+
+    buffer.add(new Rectangle(new Point(5, 5), 15, 15));
+
+    buffer.add(new Line(new Point(2, 1), new Point(25, 2)));
+    buffer.add(new Text(new Point(20, 22), "hello"));
 
     // if (player.isAlive === false) {
     //     skull.next();
@@ -106,7 +111,7 @@ ticker.add((delta) => {
 });
 
 // debug helper
-ticker.add(DisplayKeyboardInput(input));
+// ticker.add(DisplayKeyboardInput(input));
 
 const FPSDom = document.querySelector(".fps");
 if (FPSDom) {

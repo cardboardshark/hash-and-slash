@@ -1,41 +1,58 @@
-import { Point } from "@/core/primitives/point";
-import { isPointLike, isSpriteLike, type PointLike, type SpriteLike } from "@/core/types";
+import { Text } from "@/core/primitives/text";
+import { PointLike, RenderableEntity } from "@/core/types/primitive-types";
+import { chunk } from "lodash";
 
-export class Sprite implements SpriteLike {
-    x;
-    y;
+interface SpriteSheetOptions {
+    content: string;
+    numFrames: number;
+    frameWidth: number;
+    frameHeight: number;
+    initialIndex?: number;
+}
+
+export class Sprite implements RenderableEntity {
+    point;
+    index;
     content;
+    frameWidth: number;
+    frameHeight: number;
+    numFrames: number;
 
-    constructor(sprite: SpriteLike);
-    constructor(point: PointLike, content: string | number);
-    constructor(pointOrSprite: PointLike | SpriteLike, content?: string | number) {
-        if (isSpriteLike(pointOrSprite)) {
-            this.x = pointOrSprite.x;
-            this.y = pointOrSprite.y;
-            this.content = pointOrSprite.content;
-        } else if (content !== undefined) {
-            this.x = pointOrSprite.x;
-            this.y = pointOrSprite.y;
-            this.content = content;
-        } else {
-            throw new Error("Invalid arguments passed to Sprite");
-        }
+    constructor(point: PointLike, { content, initialIndex = 0, frameWidth, frameHeight, numFrames }: SpriteSheetOptions) {
+        this.point = point;
+        this.index = initialIndex;
+        this.content = content;
+        this.frameWidth = frameWidth;
+        this.frameHeight = frameHeight;
+        this.numFrames = numFrames;
     }
 
-    get point() {
-        return new Point(this.x, this.y);
+    previous() {
+        this.index = (this.index - 1) % this.numFrames;
+    }
+    next() {
+        this.index = (this.index + 1) % this.numFrames;
+    }
+    setFrame(value: number) {
+        this.index = value % this.numFrames;
     }
 
-    set(point: PointLike): this;
-    set(x: number, y: number): this;
-    set(xOrPoint: number | PointLike, y?: number) {
-        if (isPointLike(xOrPoint)) {
-            this.x = xOrPoint.x;
-            this.y = xOrPoint.y;
-        } else if (y !== undefined) {
-            this.x = xOrPoint;
-            this.y = y;
-        }
-        return this;
+    toRenderable() {
+        const rows = this.content.split("\n");
+        const chunkedRows = chunk(rows, this.frameHeight);
+        const frames = chunkedRows.reduce<string[]>((acc, rowOfRawFrames) => {
+            const rowFrames = rowOfRawFrames.reduce<string[]>((frameAcc, line) => {
+                const chunkedLines = chunk(Array.from(line), this.frameWidth + 1);
+                chunkedLines.forEach((line, index) => {
+                    frameAcc[index] ??= "";
+                    frameAcc[index] += `${line.join("")}\n`;
+                });
+                return frameAcc;
+            }, []);
+            acc.push(...rowFrames);
+            return acc;
+        }, []);
+
+        return new Text(this.point, frames.at(this.index) ?? "error");
     }
 }

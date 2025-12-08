@@ -1,20 +1,38 @@
-import type { RectangleLike, LineLike, PointLike } from "@/core/types";
+import { Line } from "@/core/primitives/line";
+import { Rectangle } from "@/core/primitives/rectangle";
+import { BoundingBox } from "@/core/types/primitive-types";
 
 /**
  * Determine if two Axis-aligned bounding box elements have overlapping pixels.
  */
-export function doRectanglesIntersect(r0: RectangleLike, r1: RectangleLike) {
+// export function doRectanglesIntersect(r0: Rectangle, r1: Rectangle) {
+//     const aRect = {
+//         x: r0.topLeft.x,
+//         y: r0.topLeft.y,
+//         width: r0.bottomRight.x - r0.topLeft.x,
+//         height: r0.bottomRight.y - r0.topLeft.y,
+//     };
+//     const bRect = {
+//         x: r1.topLeft.x,
+//         y: r1.topLeft.y,
+//         width: r1.bottomRight.x - r1.topLeft.x,
+//         height: r1.bottomRight.y - r1.topLeft.y,
+//     };
+//     return aRect.x < bRect.x + bRect.width && aRect.x + aRect.width > bRect.x && aRect.y < bRect.y + bRect.height && aRect.y + aRect.height > bRect.y;
+// }
+
+export function isBoundingBoxWithinRectangle(box: BoundingBox, rect: Rectangle) {
     const aRect = {
-        x: r0.topLeft.x,
-        y: r0.topLeft.y,
-        width: r0.bottomRight.x - r0.topLeft.x,
-        height: r0.bottomRight.y - r0.topLeft.y,
+        x: box.left,
+        y: box.top,
+        width: box.width,
+        height: box.height,
     };
     const bRect = {
-        x: r1.topLeft.x,
-        y: r1.topLeft.y,
-        width: r1.bottomRight.x - r1.topLeft.x,
-        height: r1.bottomRight.y - r1.topLeft.y,
+        x: rect.point.x,
+        y: rect.point.y,
+        width: rect.point.x + rect.width,
+        height: rect.point.y + rect.height,
     };
     return aRect.x < bRect.x + bRect.width && aRect.x + aRect.width > bRect.x && aRect.y < bRect.y + bRect.height && aRect.y + aRect.height > bRect.y;
 }
@@ -22,7 +40,7 @@ export function doRectanglesIntersect(r0: RectangleLike, r1: RectangleLike) {
 // line intercept math by Paul Bourke http://paulbourke.net/geometry/pointlineplane/
 // Determine the intersection point of two line segments
 // Return FALSE if the lines don't intersect
-export function findLineIntersection(lineA: LineLike, lineB: LineLike) {
+export function findLineIntersection(lineA: Line, lineB: Line) {
     const { x: x1, y: y1 } = lineA.start;
     const { x: x2, y: y2 } = lineA.end;
 

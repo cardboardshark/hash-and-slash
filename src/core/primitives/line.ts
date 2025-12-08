@@ -1,27 +1,25 @@
-import { type LineLike, type PointLike, isLineLike, type BoundingBox } from "@/core/types";
-import { Point } from "./point";
-import { calculateBoundingBox, calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
+import { PixelGrid } from "@/core/pipeline/pixel-grid";
+import { Point } from "@/core/primitives/point";
 import { Shape } from "@/core/primitives/shape";
-import { calculateRadianBetweenPoints, convertRadianToVector } from "@/core/utils/geometry-util";
+import { Pixel } from "@/core/types/canvas-types";
+import { PointLike, BoundingBox } from "@/core/types/primitive-types";
+import { calculateBoundingBoxFromPoints, calculateRadianBetweenPoints, convertRadianToVector } from "@/core/utils/geometry-util";
+import { calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
 
-export class Line extends Shape implements LineLike {
+export class Line extends Shape {
+    x;
+    y;
     start;
     end;
     boundingBox;
 
-    constructor(p0: PointLike, p1: PointLike);
-    constructor(line: LineLike);
-    constructor(p0: PointLike | LineLike, p1?: PointLike) {
+    constructor(p0: PointLike, p1: PointLike) {
         super();
-        if (isLineLike(p0)) {
-            this.start = new Point(p0.start);
-            this.end = new Point(p0.end);
-        } else if (p1) {
-            this.start = new Point(p0);
-            this.end = new Point(p1);
-        } else {
-            throw new Error("Invalid arguments passed to Line.");
-        }
+        this.start = new Point(p0);
+        this.end = new Point(p1);
+
+        this.x = this.start.x;
+        this.y = this.start.y;
 
         this.boundingBox = Line.calculateBoundingBox(this);
     }
@@ -78,7 +76,22 @@ export class Line extends Shape implements LineLike {
         return new Point(normalX / magnitude, normalY / magnitude);
     }
 
-    static calculateBoundingBox(line: LineLike): BoundingBox {
-        return calculateBoundingBox([line.start, line.end]);
+    toPixels() {
+        let pixels: Pixel[] = [];
+        const diagonalDistance = calculateDiagonalDistance(this.start, this.end);
+        for (let step = 0; step <= diagonalDistance; step++) {
+            const t = diagonalDistance === 0 ? 0.0 : step / diagonalDistance;
+            const { x, y } = lerpPoint(this.start, this.end, t);
+            pixels.push({
+                x,
+                y,
+                value: "l",
+            });
+        }
+        return new PixelGrid(pixels);
+    }
+
+    static calculateBoundingBox(line: Line): BoundingBox {
+        return calculateBoundingBoxFromPoints([line.start, line.end]);
     }
 }

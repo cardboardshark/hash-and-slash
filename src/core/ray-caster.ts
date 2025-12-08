@@ -1,20 +1,12 @@
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
+import { PolyLine } from "@/core/primitives/poly-line";
+import { Polygon } from "@/core/primitives/polygon";
 import { Ray } from "@/core/primitives/ray";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Text } from "@/core/primitives/text";
-import {
-    isLineLike,
-    isPointLike,
-    isPolygonLike,
-    isPolyLineLike,
-    isRectangleLike,
-    isTextLike,
-    type CollisionResult,
-    type LineLike,
-    type PointLike,
-    type ShapeLike,
-} from "@/core/types";
+import { CollisionResult } from "@/core/types/intersection-types";
+import { Renderable, isPointLike } from "@/core/types/primitive-types";
 import { findLineIntersection } from "@/core/utils/collision-util";
 import { orderBy } from "lodash";
 
@@ -23,8 +15,8 @@ export class RayCaster {
     intersections?: CollisionResult[];
     hasIntersection;
 
-    constructor(lineOrRay: LineLike | Ray, haystack: PointLike | ShapeLike | (PointLike | ShapeLike)[]) {
-        const line = lineOrRay instanceof Ray ? lineOrRay.line : new Line(lineOrRay);
+    constructor(lineOrRay: Line | Ray, haystack: Renderable | Renderable[]) {
+        const line = lineOrRay instanceof Ray ? lineOrRay.line : lineOrRay;
         const haystackAsArray = Array.isArray(haystack) ? haystack : [haystack];
 
         const intersections = haystackAsArray.reduce<CollisionResult[]>((acc, shape) => {
@@ -48,8 +40,8 @@ export class RayCaster {
         this.hasIntersection = intersections.length > 0;
     }
 
-    #test(line: Line, shape: PointLike | ShapeLike): CollisionResult[] {
-        if (isPolygonLike(shape) || isRectangleLike(shape) || isPolyLineLike(shape)) {
+    #test(line: Line, shape: Renderable): CollisionResult[] {
+        if (shape instanceof Polygon || shape instanceof Rectangle || shape instanceof PolyLine) {
             return shape.lines.reduce<CollisionResult[]>((acc, l) => {
                 const point = findLineIntersection(line, l);
                 if (point) {
@@ -59,16 +51,12 @@ export class RayCaster {
             }, []);
         }
 
-        if (isTextLike(shape)) {
-            const textAsShape = shape instanceof Text ? shape : new Text(shape);
-            const rectangle = new Rectangle(
-                new Point(textAsShape.boundingBox.left, textAsShape.boundingBox.top),
-                new Point(textAsShape.boundingBox.right, textAsShape.boundingBox.bottom)
-            );
+        if (shape instanceof Text) {
+            const rectangle = new Rectangle(new Point(shape.boundingBox.left, shape.boundingBox.top), shape.boundingBox.width, shape.boundingBox.height);
             return this.#test(line, rectangle);
         }
 
-        if (isLineLike(shape)) {
+        if (shape instanceof Line) {
             const point = findLineIntersection(line, shape);
             if (point) {
                 return [{ point, shape, face: shape }];
