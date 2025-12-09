@@ -1,4 +1,5 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
+import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Pixel } from "@/core/types/canvas-types";
 import { PointLike } from "@/core/types/primitive-types";
@@ -59,11 +60,9 @@ export class PixelGrid {
         }, "");
     }
 
-    merge(pixelsOrGrid: PixelGrid | Pixel[], point: PointLike) {
-        const incomingPixels = pixelsOrGrid instanceof PixelGrid ? pixelsOrGrid.pixels : pixelsOrGrid;
-
-        incomingPixels.forEach((p) => {
-            if (p.value !== BLANK_CHARACTER) {
+    merge(grid: PixelGrid, point: PointLike = Point.ZeroZero) {
+        grid.pixels.forEach((p) => {
+            if (p.value !== BLANK_CHARACTER && p.value !== null) {
                 const offsetP = {
                     x: Math.round(p.x + point.x),
                     y: Math.round(p.y + point.y),
@@ -77,7 +76,23 @@ export class PixelGrid {
                 }
             }
         });
+        return this;
+    }
 
+    /**
+     * Only replace existing pixels, and do not append new ones.
+     */
+    strictMerge(grid: PixelGrid, point: PointLike = Point.ZeroZero) {
+        grid.pixels.forEach((p) => {
+            const offsetP = {
+                x: Math.round(p.x + point.x),
+                y: Math.round(p.y + point.y),
+            };
+            const index = this.pixels.findIndex((p) => p.x === offsetP.x && p.y === offsetP.y);
+            if (index !== -1) {
+                this.pixels[index].value = p.value;
+            }
+        });
         return this;
     }
 

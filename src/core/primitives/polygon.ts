@@ -11,6 +11,7 @@ export class Polygon extends Shape {
     points: PointLike[];
     closed: true = true;
     boundingBox: BoundingBox;
+    fill = "p";
 
     constructor(points: PointLike[]) {
         super();
@@ -76,7 +77,7 @@ export class Polygon extends Shape {
         for (let y = 0; y < this.boundingBox.height; y++) {
             for (let x = 0; x < this.boundingBox.width; x++) {
                 if (multiDimensionalGrid[y][x] === BLANK_CHARACTER && isInside(polygon, x, y)) {
-                    multiDimensionalGrid[y][x] = "p";
+                    multiDimensionalGrid[y][x] = String(this.fill).substring(0, 1);
                 }
             }
         }

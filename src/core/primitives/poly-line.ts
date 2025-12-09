@@ -13,6 +13,7 @@ export class PolyLine extends Shape {
     points: Point[];
     closed: false = false;
     boundingBox;
+    fill = "l";
 
     constructor(points: PointLike[]) {
         super();
@@ -82,7 +83,7 @@ export class PolyLine extends Shape {
         let pixelMap = new Map<string, Pixel>();
         this.lines.forEach((l) => {
             l.toPoints().forEach((p) => {
-                pixelMap.set(`${p.x},${p.y}`, { x: p.x, y: p.y, value: "l" });
+                pixelMap.set(`${p.x},${p.y}`, { x: p.x, y: p.y, value: String(this.fill).substring(0, 1) });
             });
         });
 

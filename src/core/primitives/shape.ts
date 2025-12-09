@@ -9,6 +9,7 @@ export abstract class Shape {
     abstract boundingBox: BoundingBox;
     // defaults to top-left of element
     origin: number | string | PointLike = 0;
+    fill: number | string = "?";
 
     get point() {
         return new Point(this.x, this.y);

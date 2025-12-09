@@ -1,12 +1,13 @@
 import { Canvas } from "@/core/canvas";
+import { BLANK_CHARACTER } from "@/core/core-constants";
 import { KeyboardController } from "@/core/keyboard-controller";
 import { Container } from "@/core/primitives/container";
-import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Sprite } from "@/core/primitives/sprite";
 import { Text } from "@/core/primitives/text";
+import { Texture } from "@/core/shaders/texture";
 import { Ticker } from "@/core/ticker";
 import { AssetUtil } from "@/core/utils/asset-util";
 import { Apple } from "@/games/snake/apple";
@@ -75,6 +76,12 @@ skullBox.fill = " ";
 const skullContainer = new Container([skullBox, new Text(new Point(2, 1), "u = dead", {}), skull]);
 skullContainer.set(10, 6);
 
+const rectA = new Rectangle(new Point(5, 5), 15, 15);
+rectA.shaders.push(new Texture({ asset: AssetUtil.load("snake/wall") }));
+
+const rectB = new Rectangle(new Point(-5, 11), 50, 50);
+rectB.fill = BLANK_CHARACTER;
+rectB.shaders.push(new Texture({ asset: AssetUtil.load("snake/tree") }));
 /**
  * Game Loop
  */
@@ -92,11 +99,12 @@ ticker.add((delta) => {
 
     const buffer = new Container();
 
+    buffer.add(rectA);
+    buffer.add(rectB);
+
     buffer.add(hud);
 
-    // buffer.add(new Rectangle(new Point(5, 5), 15, 15));
-
-    buffer.add(new Text(new Point(20, 22), "hello"));
+    buffer.add(new Text(new Point(20, 2), "hello"));
 
     buffer.add(player);
     buffer.add(apple);

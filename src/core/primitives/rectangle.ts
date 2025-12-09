@@ -8,6 +8,7 @@ export class Rectangle extends Shape {
     y;
     width;
     height;
+    fill = "r";
 
     constructor(point: PointLike, width: number, height: number) {
         super();
@@ -32,7 +33,7 @@ export class Rectangle extends Shape {
     }
 
     toPixels() {
-        return new PixelGrid().fill(this.boundingBox.width, this.boundingBox.height, "r");
+        return new PixelGrid().fill(this.boundingBox.width, this.boundingBox.height, String(this.fill).substring(0, 1));
     }
 
     get boundingBox() {

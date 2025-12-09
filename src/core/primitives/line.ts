@@ -12,6 +12,7 @@ export class Line extends Shape {
     start;
     end;
     boundingBox;
+    fill = "l";
 
     constructor(p0: PointLike, p1: PointLike) {
         super();
@@ -85,7 +86,7 @@ export class Line extends Shape {
             pixels.push({
                 x,
                 y,
-                value: "l",
+                value: String(this.fill).substring(0, 1),
             });
         }
         return new PixelGrid(pixels);
