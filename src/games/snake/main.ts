@@ -93,13 +93,13 @@ ticker.add((delta) => {
     const buffer = new Container();
 
     buffer.add(hud);
+
+    // buffer.add(new Rectangle(new Point(5, 5), 15, 15));
+
+    buffer.add(new Text(new Point(20, 22), "hello"));
+
     buffer.add(player);
     buffer.add(apple);
-
-    buffer.add(new Rectangle(new Point(5, 5), 15, 15));
-
-    buffer.add(new Line(new Point(2, 1), new Point(25, 2)));
-    buffer.add(new Text(new Point(20, 22), "hello"));
 
     // if (player.isAlive === false) {
     //     skull.next();

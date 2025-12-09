@@ -2,6 +2,7 @@ import { PixelGrid } from "@/core/pipeline/pixel-grid";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { Shape } from "@/core/primitives/shape";
+import { Pixel } from "@/core/types/canvas-types";
 import { BoundingBox, PointLike } from "@/core/types/primitive-types";
 
 import { calculateBoundingBoxFromPoints, trimPointsToLength } from "@/core/utils/geometry-util";
@@ -77,7 +78,15 @@ export class PolyLine extends Shape {
     }
 
     toPixels(): PixelGrid {
-        throw new Error("Method not implemented.");
+        // prevent duplicate points
+        let pixelMap = new Map<string, Pixel>();
+        this.lines.forEach((l) => {
+            l.toPoints().forEach((p) => {
+                pixelMap.set(`${p.x},${p.y}`, { x: p.x, y: p.y, value: "l" });
+            });
+        });
+
+        return new PixelGrid(Array.from(pixelMap.values()));
     }
 
     static calculateBoundingBox(polyLine: PolyLine): BoundingBox {

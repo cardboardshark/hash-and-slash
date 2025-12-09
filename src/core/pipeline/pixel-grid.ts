@@ -65,8 +65,8 @@ export class PixelGrid {
         incomingPixels.forEach((p) => {
             if (p.value !== BLANK_CHARACTER) {
                 const offsetP = {
-                    x: p.x + point.x,
-                    y: p.y + point.y,
+                    x: Math.round(p.x + point.x),
+                    y: Math.round(p.y + point.y),
                 };
                 const index = this.pixels.findIndex((p) => p.x === offsetP.x && p.y === offsetP.y);
 

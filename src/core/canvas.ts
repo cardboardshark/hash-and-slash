@@ -45,9 +45,7 @@ export class Canvas {
                 this.#recursiveDraw(resultContainer, screen, screenRect);
             } else {
                 if (isBoundingBoxWithinRectangle(item.boundingBox, screenRect)) {
-                    if (item instanceof Text || item instanceof Line || item instanceof Rectangle) {
-                        screen.merge(item.toPixels(), item.point.add(container.point));
-                    }
+                    screen.merge(item.toPixels(), item.point.add(container.point));
                 } else {
                     console.log("discarding", item);
                 }
