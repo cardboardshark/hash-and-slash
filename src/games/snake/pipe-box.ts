@@ -55,6 +55,9 @@ export class PipeBox implements RenderableEntity {
             }
             content += "\n";
         }
-        return new Text(this.point, content);
+
+        const rect = new Rectangle(this.point, this.width, this.height);
+        rect.texture = { src: content, fill: BLANK_CHARACTER };
+        return rect;
     }
 }

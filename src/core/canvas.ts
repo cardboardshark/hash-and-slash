@@ -2,6 +2,7 @@ import { PixelGrid } from "@/core/pipeline/pixel-grid";
 import { Container } from "@/core/primitives/container";
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
+import { Shape } from "@/core/primitives/shape";
 import { Texture } from "@/core/shaders/texture";
 import { isRenderableEntity } from "@/core/types/primitive-types";
 import { isBoundingBoxWithinRectangle } from "@/core/utils/collision-util";
@@ -40,6 +41,7 @@ export class Canvas {
                 } else {
                     resultContainer = new Container(Array.isArray(result) ? result : [result]);
                 }
+                resultContainer.set(container.point);
                 this.#recursiveDraw(resultContainer, screen, screenRect);
             } else {
                 if (isBoundingBoxWithinRectangle(item.boundingBox, screenRect)) {
@@ -62,7 +64,8 @@ export class Canvas {
                     for (let i = 0; i < item.shaders.length; i += 1) {
                         item.shaders[i].apply(itemPixels);
                     }
-                    screen.merge(itemPixels, item.point.add(container.point));
+
+                    screen.merge(itemPixels, container.point.add(item.originPoint));
                 } else {
                     console.log("discarding", item);
                 }

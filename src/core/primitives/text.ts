@@ -1,14 +1,14 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
 import { PixelGrid } from "@/core/pipeline/pixel-grid";
 import { Shape } from "@/core/primitives/shape";
-import { PointLike, TextOptions, BoundingBox } from "@/core/types/primitive-types";
+import { PointLike, TextOptions } from "@/core/types/primitive-types";
 
 export class Text extends Shape {
     x;
     y;
     text;
     options;
-    boundingBox;
+    fill = BLANK_CHARACTER;
 
     constructor(point: PointLike, text: string | number, options?: TextOptions) {
         super();
@@ -17,8 +17,6 @@ export class Text extends Shape {
         this.y = point.y;
         this.text = text;
         this.options = options;
-
-        this.boundingBox = Text.calculateBoundingBox(this);
     }
 
     toPixels() {
@@ -48,22 +46,13 @@ export class Text extends Shape {
                     composedLine = line.padStart(numCharacters, fill);
                 }
             }
-
-            let xPos = this.x;
-            if (width === undefined && align !== undefined) {
-                if (align === "right") {
-                    xPos -= numCharacters;
-                } else if (align === "center") {
-                    xPos -= Math.floor(numCharacters / 2);
-                }
-            }
             return composedLine;
         });
         return PixelGrid.parse(output.join("\n"));
     }
 
-    static calculateBoundingBox(text: Text): BoundingBox {
-        const splitText = String(text.text).split("\n");
+    get boundingBox() {
+        const splitText = String(this.text).split("\n");
         const longestRow = splitText.reduce((max, line) => {
             if (line.length > max) {
                 max = line.length;
@@ -71,10 +60,10 @@ export class Text extends Shape {
             return max;
         }, 0);
 
-        const { width, align = "left" } = text.options ?? {};
+        const { width, align = "left" } = this.options ?? {};
         const numCharacters = width ?? longestRow;
 
-        let xPos = text.x;
+        let xPos = this.x;
         if (width === undefined && align !== undefined) {
             if (align === "right") {
                 xPos -= numCharacters;
@@ -86,8 +75,8 @@ export class Text extends Shape {
         return {
             left: xPos,
             right: xPos + numCharacters,
-            top: text.y,
-            bottom: text.y + splitText.length,
+            top: this.y,
+            bottom: this.y + splitText.length,
             width: numCharacters,
             height: splitText.length,
         };

@@ -1,4 +1,5 @@
-import { Text } from "@/core/primitives/text";
+import { BLANK_CHARACTER } from "@/core/core-constants";
+import { Rectangle } from "@/core/primitives/rectangle";
 import { PointLike, RenderableEntity } from "@/core/types/primitive-types";
 import { chunk } from "lodash";
 
@@ -27,11 +28,14 @@ export class Sprite implements RenderableEntity {
         this.numFrames = numFrames;
     }
 
-    previous() {
-        this.index = (this.index - 1) % this.numFrames;
+    previous(increment = 1) {
+        this.next(increment * -1);
     }
-    next() {
-        this.index = (this.index + 1) % this.numFrames;
+    next(increment = 1) {
+        this.index += increment;
+        if (this.index > this.numFrames) {
+            this.index = 0;
+        }
     }
     setFrame(value: number) {
         this.index = value % this.numFrames;
@@ -53,6 +57,10 @@ export class Sprite implements RenderableEntity {
             return acc;
         }, []);
 
-        return new Text(this.point, frames.at(this.index) ?? "error");
+        const currentIndex = Math.floor(this.index) % this.numFrames;
+
+        const rect = new Rectangle(this.point, this.frameWidth, this.frameHeight);
+        rect.texture = { src: frames.at(currentIndex) ?? "error", fill: BLANK_CHARACTER };
+        return rect;
     }
 }

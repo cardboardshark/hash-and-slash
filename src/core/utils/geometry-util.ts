@@ -1,6 +1,7 @@
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { BoundingBox, PointLike } from "@/core/types/primitive-types";
+import { parsePositionString } from "@/core/utils/string-util";
 
 export function convertRadianToVector(radian: number): PointLike {
     return { x: Math.cos(radian), y: -Math.sin(radian) };
@@ -31,6 +32,26 @@ export function calculateTotalDistanceBetweenPoints(points: PointLike[]) {
         }
         return total;
     }, 0);
+}
+
+export function calculateRelativeOriginPoint(parent: { width: number; height: number }, child: { width: number; height: number }, positionString = "") {
+    if (!positionString || positionString.trim() === "") {
+        return Point.ZeroZero;
+    }
+    const offset = parsePositionString(positionString);
+    let offsetX = 0;
+    let offsetY = 0;
+    if (offset.x.is_percent) {
+        offsetX = parent.width * offset.x.value - child.width * offset.x.value;
+    } else {
+        offsetX = offset.x.value;
+    }
+    if (offset.y.is_percent) {
+        offsetY = parent.height * offset.y.value - child.height * offset.y.value;
+    } else {
+        offsetY = offset.y.value;
+    }
+    return new Point(offsetX, offsetY);
 }
 
 export function trimPointsToLength(points: PointLike[], maxLength: number) {

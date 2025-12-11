@@ -73,7 +73,6 @@ export class Player implements RenderableEntity {
             // BORKED
             // Intersections from the debug ray do not prevent movement.
             this.debugRay = new Ray(spaceInFrontOfPlayer, this.vector, this.speed * delta.deltaMS - 1);
-            this.debugRay.line.stroke = "-";
             this.debugCollisions = new RayCaster(this.debugRay, this.trail.line);
 
             if (this.collissionRay.hasIntersection) {
@@ -106,7 +105,7 @@ export class Player implements RenderableEntity {
         const container = new Container();
 
         const trail = this.trail.line;
-        trail.stroke = "-";
+        trail.fill = "-";
 
         container.add(trail);
 
@@ -116,7 +115,7 @@ export class Player implements RenderableEntity {
             this.debugCollisions?.intersections?.forEach((intersection) => {
                 if (intersection.face) {
                     const line = intersection.face;
-                    line.stroke = "X";
+                    line.fill = "X";
                     container.add(line);
 
                     container.add(new Text(intersection.point, "*"));

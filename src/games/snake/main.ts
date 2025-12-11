@@ -1,5 +1,6 @@
 import { Canvas } from "@/core/canvas";
 import { BLANK_CHARACTER } from "@/core/core-constants";
+import { DisplayKeyboardInput } from "@/core/debug";
 import { KeyboardController } from "@/core/keyboard-controller";
 import { Container } from "@/core/primitives/container";
 import { Point } from "@/core/primitives/point";
@@ -58,7 +59,7 @@ const scoreText = new Text(new Point(scoreBox.point).add({ x: 1, y: 1 }), `\nMy 
 // const liveArea = new Rectangle(Point.ZeroZero, config.canvas.width, 5);
 const liveArea = new PipeBox(Point.ZeroZero, config.canvas.width, config.canvas.height - 5);
 const scoreContainer = new Container([scoreBox, scoreText]);
-scoreContainer.set(0, config.canvas.height - 5);
+scoreContainer.set({ x: 0, y: config.canvas.height - 5 });
 
 const hud = new Container([liveArea, scoreContainer]);
 
@@ -71,18 +72,11 @@ const skull = new Sprite(new Point(2, 3), {
     frameHeight: 6,
     numFrames: 10,
 });
-const skullBox = new PipeBox(new Point(0, 0), 11, 9);
-skullBox.fill = " ";
-const skullContainer = new Container([skullBox, new Text(new Point(2, 1), "u = dead", {}), skull]);
-skullContainer.set(10, 6);
+const skullBox = new PipeBox(new Point(0, 0), 12, 9);
+const skullContainer = new Container([skullBox, new Text(new Point(2, 1), "u = dead"), skull]);
+skullContainer._debug = true;
+skullContainer.set(new Point(9, 8));
 
-const rectA = new Rectangle(new Point(5, 5), 15, 15);
-rectA.fill = null;
-rectA.texture = { src: AssetUtil.load("snake/wall"), position: "1 10" };
-
-// const rectB = new Rectangle(new Point(-5, 11), 50, 50);
-// rectB.fill = BLANK_CHARACTER;
-// rectB.shaders.push(new Texture({ src: AssetUtil.load("snake/tree") }));
 /**
  * Game Loop
  */
@@ -100,18 +94,13 @@ ticker.add((delta) => {
 
     const buffer = new Container();
 
-    buffer.add(rectA);
-    // buffer.add(rectB);
-
     buffer.add(hud);
-
-    // buffer.add(new Text(new Point(20, 2), "hello"));
 
     buffer.add(player);
     buffer.add(apple);
 
     // if (player.isAlive === false) {
-    //     skull.next();
+    // skull.next(10 * delta.deltaTime);
     //     buffer.add(skullContainer);
     // }
 
@@ -120,7 +109,7 @@ ticker.add((delta) => {
 });
 
 // debug helper
-// ticker.add(DisplayKeyboardInput(input));
+ticker.add(DisplayKeyboardInput(input));
 
 const FPSDom = document.querySelector(".fps");
 if (FPSDom) {

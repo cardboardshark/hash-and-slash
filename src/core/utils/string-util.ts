@@ -1,14 +1,26 @@
-export function parsePositionString(position: string) {
+export function parsePositionString(position?: string) {
+    if (position === undefined) {
+        return {
+            x: {
+                value: 0,
+                is_percent: false,
+            },
+            y: {
+                value: 0,
+                is_percent: false,
+            },
+        };
+    }
     const [x, y] = position.trim().split(" ");
     if (y === undefined) {
         const isPercent = x.includes("%");
         return {
             x: {
-                value: parseFloat(x),
+                value: isPercent ? parseFloat(x) / 100 : Number(x),
                 is_percent: isPercent,
             },
             y: {
-                value: parseFloat(x),
+                value: isPercent ? parseFloat(x) / 100 : Number(x),
                 is_percent: isPercent,
             },
         };

@@ -2,7 +2,6 @@ import { Container } from "@/core/primitives/container";
 import { Canvas } from "./canvas";
 import type { KeyboardController } from "./keyboard-controller";
 import { Point } from "./primitives/point";
-import { Sprite } from "./primitives/sprite";
 import { Text } from "@/core/primitives/text";
 
 const canvas = new Canvas({
@@ -24,7 +23,9 @@ export function DisplayKeyboardInput(input: KeyboardController) {
                 }
 
                 if (state.timestamp) {
-                    buffer.add(new Text(new Point(canvas.width - 1, index), `${Date.now() - state.timestamp}ms`, { align: "right" }));
+                    const timePressed = new Text(new Point(canvas.width - 1, index), `${Date.now() - state.timestamp}ms`).setOrigin("100%");
+                    timePressed._debug = true;
+                    buffer.add(timePressed);
                 }
             }
             buffer.add(new Text(new Point(3, index), key.toUpperCase()));
