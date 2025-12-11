@@ -77,11 +77,12 @@ const skullContainer = new Container([skullBox, new Text(new Point(2, 1), "u = d
 skullContainer.set(10, 6);
 
 const rectA = new Rectangle(new Point(5, 5), 15, 15);
-rectA.shaders.push(new Texture({ asset: AssetUtil.load("snake/wall") }));
+rectA.fill = null;
+rectA.texture = { src: AssetUtil.load("snake/wall"), position: "1 10" };
 
-const rectB = new Rectangle(new Point(-5, 11), 50, 50);
-rectB.fill = BLANK_CHARACTER;
-rectB.shaders.push(new Texture({ asset: AssetUtil.load("snake/tree") }));
+// const rectB = new Rectangle(new Point(-5, 11), 50, 50);
+// rectB.fill = BLANK_CHARACTER;
+// rectB.shaders.push(new Texture({ src: AssetUtil.load("snake/tree") }));
 /**
  * Game Loop
  */
@@ -100,11 +101,11 @@ ticker.add((delta) => {
     const buffer = new Container();
 
     buffer.add(rectA);
-    buffer.add(rectB);
+    // buffer.add(rectB);
 
     buffer.add(hud);
 
-    buffer.add(new Text(new Point(20, 2), "hello"));
+    // buffer.add(new Text(new Point(20, 2), "hello"));
 
     buffer.add(player);
     buffer.add(apple);

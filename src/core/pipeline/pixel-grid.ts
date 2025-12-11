@@ -3,7 +3,7 @@ import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Pixel } from "@/core/types/canvas-types";
 import { PointLike } from "@/core/types/primitive-types";
-import { isPointInsideRectangle } from "@/core/utils/geometry-util";
+import { calculateBoundingBoxFromPoints, isPointInsideRectangle } from "@/core/utils/geometry-util";
 import { range, sortBy } from "lodash";
 
 interface toStringOptions {
@@ -94,6 +94,10 @@ export class PixelGrid {
             }
         });
         return this;
+    }
+
+    get boundingBox() {
+        return calculateBoundingBoxFromPoints(this.pixels);
     }
 
     static parse(input: string) {

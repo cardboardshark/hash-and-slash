@@ -2,6 +2,7 @@ import { PixelGrid } from "@/core/pipeline/pixel-grid";
 import { Container } from "@/core/primitives/container";
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
+import { Texture } from "@/core/shaders/texture";
 import { isRenderableEntity } from "@/core/types/primitive-types";
 import { isBoundingBoxWithinRectangle } from "@/core/utils/collision-util";
 
@@ -44,6 +45,20 @@ export class Canvas {
                 if (isBoundingBoxWithinRectangle(item.boundingBox, screenRect)) {
                     // mutated by reference
                     const itemPixels = item.toPixels();
+
+                    if (item.texture) {
+                        let itemTexture;
+                        if (item.texture instanceof Texture) {
+                            itemTexture = item.texture;
+                        }
+                        if (typeof item.texture === "object") {
+                            itemTexture = new Texture(item.texture);
+                        }
+                        if (typeof item.texture === "string") {
+                            itemTexture = new Texture({ src: item.texture });
+                        }
+                        itemTexture?.apply(itemPixels);
+                    }
                     for (let i = 0; i < item.shaders.length; i += 1) {
                         item.shaders[i].apply(itemPixels);
                     }

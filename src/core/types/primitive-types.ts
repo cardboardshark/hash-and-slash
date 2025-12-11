@@ -34,3 +34,9 @@ export interface BoundingBox {
     width: number;
     height: number;
 }
+
+export interface TextureOptions {
+    src: string;
+    position?: string;
+    fill?: number | string;
+}
