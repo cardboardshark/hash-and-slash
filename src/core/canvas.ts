@@ -1,6 +1,10 @@
-import { PixelGrid } from "@/core/pipeline/pixel-grid";
+import { BLANK_CHARACTER } from "@/core/core-constants";
+import { Buffer } from "@/core/pipeline/buffer";
+import { DebugRectangle } from "@/core/pipeline/debug-rectangle";
 import { Container } from "@/core/primitives/container";
+import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
+import { PolyLine } from "@/core/primitives/poly-line";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Shape } from "@/core/primitives/shape";
 import { Texture } from "@/core/shaders/texture";
@@ -29,7 +33,28 @@ export class Canvas {
         return this.#config.height;
     }
 
-    #recursiveDraw(container: Container, screen: PixelGrid, screenRect: Rectangle): PixelGrid {
+    #renderShape(shape: Shape) {
+        const buffer = shape.toBuffer();
+        if (shape.texture) {
+            let itemTexture;
+            if (shape.texture instanceof Texture) {
+                itemTexture = shape.texture;
+            }
+            if (typeof shape.texture === "object") {
+                itemTexture = new Texture(shape.texture);
+            }
+            if (typeof shape.texture === "string") {
+                itemTexture = new Texture({ src: shape.texture });
+            }
+            itemTexture?.apply(buffer);
+        }
+        for (let i = 0; i < shape.shaders.length; i += 1) {
+            shape.shaders[i].apply(buffer);
+        }
+        return buffer;
+    }
+
+    #recursiveDraw(container: Container, screen: Buffer, screenRect: Rectangle) {
         container.children.forEach((item) => {
             if (item instanceof Container) {
                 this.#recursiveDraw(item, screen, screenRect);
@@ -44,43 +69,38 @@ export class Canvas {
                 resultContainer.set(container.point);
                 this.#recursiveDraw(resultContainer, screen, screenRect);
             } else {
-                if (isBoundingBoxWithinRectangle(item.boundingBox, screenRect)) {
-                    // mutated by reference
-                    const itemPixels = item.toPixels();
-
-                    if (item.texture) {
-                        let itemTexture;
-                        if (item.texture instanceof Texture) {
-                            itemTexture = item.texture;
-                        }
-                        if (typeof item.texture === "object") {
-                            itemTexture = new Texture(item.texture);
-                        }
-                        if (typeof item.texture === "string") {
-                            itemTexture = new Texture({ src: item.texture });
-                        }
-                        itemTexture?.apply(itemPixels);
-                    }
-                    for (let i = 0; i < item.shaders.length; i += 1) {
-                        item.shaders[i].apply(itemPixels);
-                    }
-
-                    screen.merge(itemPixels, container.point.add(item.originPoint));
+                if (item instanceof Shape && isBoundingBoxWithinRectangle(item.boundingBox, screenRect)) {
+                    screen.merge(this.#renderShape(item), {
+                        offset: container.point.add(item.originPoint),
+                        limit: screenRect,
+                    });
+                } else if (item instanceof Line || item instanceof PolyLine) {
+                    screen.merge(item.toBuffer(), {
+                        offset: container.point,
+                        limit: screenRect,
+                    });
                 } else {
-                    console.log("discarding", item);
+                    console.log("out-of-bounds item culled from render", item);
                 }
             }
         });
         return screen;
     }
 
-    draw(buffer: Container) {
-        let screen = new PixelGrid();
-        screen.fill(this.#config.width, this.#config.height);
+    draw(container: Container) {
+        const screenRect = new Rectangle(Point.ZeroZero, this.#config.width, this.#config.height);
+        let screen = new Buffer();
+        screen.fillRectangle(screenRect);
 
-        const screenRect = new Rectangle({ x: 0, y: 0 }, this.#config.width, this.#config.height);
+        if (this.debugMode) {
+            const debugRect = new DebugRectangle(this.#config.width, this.#config.height);
+            screen.merge(this.#renderShape(debugRect.toRenderable()), {
+                offset: new Point(-3, -3),
+            });
+        }
 
-        this.#recursiveDraw(buffer, screen, screenRect);
+        screen.deleteRectangle(screenRect);
+        this.#recursiveDraw(container, screen, screenRect);
 
         if (!this.#config.element) {
             throw new Error("Unable to locate canvas element.");
@@ -88,56 +108,7 @@ export class Canvas {
         this.#config.element.style.setProperty("--width", String(this.#config.width));
         this.#config.element.style.setProperty("--height", String(this.#config.height));
 
-        // if (this.debugMode) {
-        //     const firstRow = Array.from({ length: this.#config.width }).fill(null);
-
-        //     // prepend y-axis ruler
-        //     pixels = pixels.map((column, index) => {
-        //         return [`${String(index).padStart(2, " ")}→`, ...column, `←${String(index).padEnd(2, " ")}`];
-        //     });
-
-        //     pixels.unshift(["   ", ...firstRow.map(() => "↓")]);
-        //     pixels.unshift(["   ", ...firstRow.map((_value, index) => index % 10)]);
-        //     pixels.unshift([
-        //         "   ",
-        //         ...firstRow.map((_value, index) => {
-        //             const firstDigit = Math.floor(index / 10);
-        //             if (firstDigit === 0) {
-        //                 return " ";
-        //             }
-        //             return firstDigit;
-        //         }),
-        //     ]);
-        //     pixels.push(["   ", ...firstRow.map(() => "↑")]);
-        //     pixels.push([
-        //         "   ",
-        //         ...firstRow.map((_value, index) => {
-        //             const firstDigit = Math.floor(index / 10);
-        //             if (firstDigit === 0) {
-        //                 return index % 10;
-        //             }
-        //             return firstDigit;
-        //         }),
-        //     ]);
-        //     pixels.push([
-        //         "   ",
-        //         ...firstRow.map((_value, index) => {
-        //             const firstDigit = Math.floor(index / 10);
-        //             if (firstDigit === 0) {
-        //                 return " ";
-        //             }
-        //             return index % 10;
-        //         }),
-        //     ]);
-        // }
-
-        const output = screen.toString({
-            crop: {
-                point: Point.ZeroZero,
-                width: this.#config.width,
-                height: this.#config.height,
-            },
-        });
+        const output = screen.toString();
 
         // skip writes if nothing changed
         if (this.#config.element.innerHTML !== output) {

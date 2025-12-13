@@ -18,14 +18,14 @@ export class Trail {
     }
 
     trim() {
-        const trimmedPoints = trimPointsToLength([this.ownerPositionFn(), ...this.points], this.maxLength);
-        trimmedPoints.splice(0, 1);
-        this.points = trimmedPoints;
+        // const trimmedPoints = trimPointsToLength([this.ownerPositionFn(), ...this.points], this.maxLength);
+        // trimmedPoints.splice(0, 1);
+        // this.points = trimmedPoints;
         // console.log("length", calculateTotalDistanceBetweenPoints([this.ownerPositionFn(), ...this.points]), this.points);
     }
 
     get line() {
-        return new PolyLine([this.ownerPositionFn(), ...this.points]).trim(this.maxLength);
+        return new PolyLine([this.ownerPositionFn(), ...this.points]);
     }
 
     get vector() {

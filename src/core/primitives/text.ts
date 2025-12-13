@@ -1,5 +1,5 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
-import { PixelGrid } from "@/core/pipeline/pixel-grid";
+import { Buffer } from "@/core/pipeline/buffer";
 import { Shape } from "@/core/primitives/shape";
 import { PointLike, TextOptions } from "@/core/types/primitive-types";
 
@@ -19,7 +19,7 @@ export class Text extends Shape {
         this.options = options;
     }
 
-    toPixels() {
+    toBuffer() {
         const splitText = String(this.text).split("\n");
         const longestRow = splitText.reduce((max, line) => {
             if (line.length > max) {
@@ -48,7 +48,7 @@ export class Text extends Shape {
             }
             return composedLine;
         });
-        return PixelGrid.parse(output.join("\n"));
+        return Buffer.parse(output.join("\n"));
     }
 
     get boundingBox() {

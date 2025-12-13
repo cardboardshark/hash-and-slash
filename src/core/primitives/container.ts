@@ -18,6 +18,10 @@ export class Container {
         this.children.push(value);
     }
 
+    prepend(value: Renderable) {
+        this.children.unshift(value);
+    }
+
     get point() {
         return new Point(this.x, this.y);
     }

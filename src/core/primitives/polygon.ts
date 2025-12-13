@@ -1,5 +1,6 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
-import { PixelGrid } from "@/core/pipeline/pixel-grid";
+import { Buffer } from "@/core/pipeline/buffer";
+
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { Shape } from "@/core/primitives/shape";
@@ -53,8 +54,8 @@ export class Polygon extends Shape {
         return this.points[this.points.length - 1];
     }
 
-    toPixels(): PixelGrid {
-        // the polygon algorithm handles grids in a different format to PixelGrid.
+    toBuffer() {
+        // the polygon algorithm handles grids in a different format to toBuffer.
         const multiDimensionalGrid = Array.from({ length: this.boundingBox.height }, () =>
             Array.from({ length: this.boundingBox.width }, () => BLANK_CHARACTER)
         );
@@ -82,7 +83,7 @@ export class Polygon extends Shape {
             }
         }
 
-        const grid = new PixelGrid();
+        const grid = new Buffer();
         grid.pixels = multiDimensionalGrid.reduce<Pixel[]>((acc, column, columnIndex) => {
             const rowPixels = column.map((character, rowIndex) => {
                 return {

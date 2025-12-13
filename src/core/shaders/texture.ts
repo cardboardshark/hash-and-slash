@@ -1,5 +1,6 @@
-import { PixelGrid } from "@/core/pipeline/pixel-grid";
+import { Buffer } from "@/core/pipeline/buffer";
 import { Point } from "@/core/primitives/point";
+import { Rectangle } from "@/core/primitives/rectangle";
 import { Text } from "@/core/primitives/text";
 import { Shader } from "@/core/shaders/shader";
 import { TextureOptions } from "@/core/types/primitive-types";
@@ -17,15 +18,15 @@ export class Texture extends Shader {
         this.position = position;
     }
 
-    apply(source: PixelGrid) {
-        const localGrid = new Text(Point.ZeroZero, this.src).toPixels();
+    apply(source: Buffer) {
+        const localGrid = new Text(Point.ZeroZero, this.src).toBuffer();
         const offsetPoint = calculateRelativeOriginPoint(source.boundingBox, localGrid.boundingBox, this.position);
 
         if (this.fill) {
-            source.fill(source.boundingBox.width, source.boundingBox.height, this.fill);
+            source.fillRectangle(new Rectangle(Point.ZeroZero, source.boundingBox.width, source.boundingBox.height), this.fill);
         }
 
-        source.strictMerge(localGrid, offsetPoint);
+        source.merge(localGrid, { offset: offsetPoint, lockTransparentPixels: true });
         return source;
     }
 }

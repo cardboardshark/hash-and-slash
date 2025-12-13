@@ -1,28 +1,22 @@
-import { PixelGrid } from "@/core/pipeline/pixel-grid";
+import { Buffer } from "@/core/pipeline/buffer";
 import { Point } from "@/core/primitives/point";
-import { Shape } from "@/core/primitives/shape";
 import { Pixel } from "@/core/types/canvas-types";
-import { PointLike, BoundingBox } from "@/core/types/primitive-types";
+import { PointLike } from "@/core/types/primitive-types";
 import { calculateBoundingBoxFromPoints, calculateRadianBetweenPoints, convertRadianToVector } from "@/core/utils/geometry-util";
 import { calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
 
-export class Line extends Shape {
-    x;
-    y;
+export class Line {
     start;
     end;
-    boundingBox;
     fill = "l";
 
     constructor(p0: PointLike, p1: PointLike) {
-        super();
         this.start = new Point(p0);
         this.end = new Point(p1);
+    }
 
-        this.x = this.start.x;
-        this.y = this.start.y;
-
-        this.boundingBox = Line.calculateBoundingBox(this);
+    get point() {
+        return this.start;
     }
 
     get length() {
@@ -52,7 +46,6 @@ export class Line extends Shape {
 
     setLength(length: number) {
         this.end = this.start.project(convertRadianToVector(this.radian), length);
-        this.boundingBox = Line.calculateBoundingBox(this);
         return this;
     }
 
@@ -77,7 +70,7 @@ export class Line extends Shape {
         return new Point(normalX / magnitude, normalY / magnitude);
     }
 
-    toPixels() {
+    toBuffer() {
         let pixels: Pixel[] = [];
         const diagonalDistance = calculateDiagonalDistance(this.start, this.end);
         for (let step = 0; step <= diagonalDistance; step++) {
@@ -89,10 +82,10 @@ export class Line extends Shape {
                 value: String(this.fill).substring(0, 1),
             });
         }
-        return new PixelGrid(pixels);
+        return new Buffer(pixels);
     }
 
-    static calculateBoundingBox(line: Line): BoundingBox {
-        return calculateBoundingBoxFromPoints([line.start, line.end]);
+    get boundingBox() {
+        return calculateBoundingBoxFromPoints([this.start, this.end]);
     }
 }

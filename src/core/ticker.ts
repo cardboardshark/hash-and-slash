@@ -24,6 +24,7 @@ export class Ticker {
     lastTime: number = -1;
     started = false;
     paused = false;
+    windowBlurred = false;
 
     constructor() {
         this.deltaMS = 1 / Ticker.targetFPMS;
@@ -41,10 +42,18 @@ export class Ticker {
                 }
             }
         };
+
+        // don't burn CPU if we're not in focus
+        window.addEventListener("blur", () => {
+            this.windowBlurred = true;
+        });
+        window.addEventListener("focus", () => {
+            this.windowBlurred = false;
+        });
     }
 
     update(currentTime: number = performance.now()) {
-        if (this.paused) {
+        if (this.paused || this.windowBlurred) {
             return;
         }
 

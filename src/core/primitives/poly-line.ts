@@ -1,29 +1,20 @@
-import { PixelGrid } from "@/core/pipeline/pixel-grid";
+import { Buffer } from "@/core/pipeline/buffer";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
-import { Shape } from "@/core/primitives/shape";
+
 import { Pixel } from "@/core/types/canvas-types";
-import { BoundingBox, PointLike } from "@/core/types/primitive-types";
+import { PointLike } from "@/core/types/primitive-types";
 
 import { calculateBoundingBoxFromPoints, trimPointsToLength } from "@/core/utils/geometry-util";
+import { calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
 
-export class PolyLine extends Shape {
-    x;
-    y;
+export class PolyLine {
     points: Point[];
     closed: false = false;
-    boundingBox;
     fill = "l";
 
     constructor(points: PointLike[]) {
-        super();
-
         this.points = points.map((p) => new Point(p));
-
-        this.x = this.points[0]?.x ?? 0;
-        this.y = this.points[0]?.y ?? 0;
-
-        this.boundingBox = PolyLine.calculateBoundingBox(this);
     }
 
     clone() {
@@ -32,12 +23,10 @@ export class PolyLine extends Shape {
 
     add(point: PointLike) {
         this.points.push(new Point(point));
-        this.boundingBox = PolyLine.calculateBoundingBox(this);
     }
 
     prepend(point: PointLike) {
         this.points.unshift(new Point(point));
-        this.boundingBox = PolyLine.calculateBoundingBox(this);
     }
 
     set(index: number, point: PointLike) {
@@ -50,8 +39,6 @@ export class PolyLine extends Shape {
 
     trim(length: number) {
         this.points = trimPointsToLength(this.points, length);
-        this.boundingBox = PolyLine.calculateBoundingBox(this);
-
         return this;
     }
 
@@ -78,19 +65,25 @@ export class PolyLine extends Shape {
         return this.lines.reduce((sum, l) => sum + l.length, 0);
     }
 
-    toPixels(): PixelGrid {
-        // prevent duplicate points
-        let pixelMap = new Map<string, Pixel>();
+    toBuffer() {
+        let pixels: Pixel[] = [];
         this.lines.forEach((l) => {
-            l.toPoints().forEach((p) => {
-                pixelMap.set(`${p.x},${p.y}`, { x: p.x, y: p.y, value: String(this.fill).substring(0, 1) });
-            });
+            const diagonalDistance = calculateDiagonalDistance(l.start, l.end);
+            for (let step = 0; step <= diagonalDistance; step++) {
+                const t = diagonalDistance === 0 ? 0.0 : step / diagonalDistance;
+                const { x, y } = lerpPoint(l.start, l.end, t);
+                pixels.push({
+                    x,
+                    y,
+                    value: String(this.fill).substring(0, 1),
+                });
+            }
         });
 
-        return new PixelGrid(Array.from(pixelMap.values()));
+        return new Buffer(pixels);
     }
 
-    static calculateBoundingBox(polyLine: PolyLine): BoundingBox {
-        return calculateBoundingBoxFromPoints(polyLine.points);
+    get boundingBox() {
+        return calculateBoundingBoxFromPoints(this.points);
     }
 }

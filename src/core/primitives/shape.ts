@@ -1,4 +1,4 @@
-import { PixelGrid } from "@/core/pipeline/pixel-grid";
+import { Buffer } from "@/core/pipeline/buffer";
 import { Point } from "@/core/primitives/point";
 import { Shader } from "@/core/shaders/shader";
 import { Texture } from "@/core/shaders/texture";
@@ -50,7 +50,7 @@ export abstract class Shape {
         return this;
     }
 
-    abstract toPixels(): PixelGrid;
+    abstract toBuffer(): Buffer;
 
     shaders: Shader[] = [];
 }

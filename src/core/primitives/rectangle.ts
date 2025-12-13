@@ -1,5 +1,6 @@
-import { PixelGrid } from "@/core/pipeline/pixel-grid";
+import { Buffer } from "@/core/pipeline/buffer";
 import { Line } from "@/core/primitives/line";
+import { Point } from "@/core/primitives/point";
 import { Shape } from "@/core/primitives/shape";
 import { PointLike } from "@/core/types/primitive-types";
 
@@ -32,8 +33,9 @@ export class Rectangle extends Shape {
         ];
     }
 
-    toPixels() {
-        return new PixelGrid().fill(this.boundingBox.width, this.boundingBox.height, String(this.fill).substring(0, 1));
+    toBuffer() {
+        const fillValue = this.fill !== null ? String(this.fill).substring(0, 1) : null;
+        return new Buffer().fillRectangle(new Rectangle(Point.ZeroZero, this.width, this.height), fillValue);
     }
 
     get boundingBox() {

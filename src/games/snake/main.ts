@@ -1,14 +1,13 @@
 import { Canvas } from "@/core/canvas";
-import { BLANK_CHARACTER } from "@/core/core-constants";
 import { DisplayKeyboardInput } from "@/core/debug";
 import { KeyboardController } from "@/core/keyboard-controller";
 import { Container } from "@/core/primitives/container";
+import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Sprite } from "@/core/primitives/sprite";
 import { Text } from "@/core/primitives/text";
-import { Texture } from "@/core/shaders/texture";
 import { Ticker } from "@/core/ticker";
 import { AssetUtil } from "@/core/utils/asset-util";
 import { Apple } from "@/games/snake/apple";
@@ -18,10 +17,6 @@ import { Player } from "@/games/snake/player";
 /**
  * TODO:
  * collission detection does not detect 1-height lines on same axis ( ie o -> o )
- * Input is not detected frequently enough
- *
- * Separate input controller from ticker logic
- * Player listens for input, sets planned movement but does not execute movement until tick
  *
  */
 const config = {
@@ -73,7 +68,7 @@ const skull = new Sprite(new Point(2, 3), {
     numFrames: 10,
 });
 const skullBox = new PipeBox(new Point(0, 0), 12, 9);
-const skullContainer = new Container([skullBox, new Text(new Point(2, 1), "u = dead"), skull]);
+const skullContainer = new Container([skullBox, skull]);
 skullContainer._debug = true;
 skullContainer.set(new Point(9, 8));
 
@@ -82,7 +77,7 @@ skullContainer.set(new Point(9, 8));
  */
 ticker.add((delta) => {
     // if (player.isAlive) {
-    player.move(delta, input.cardinalVector, apple.numCollected, liveArea.rectangle);
+    player.move(delta, input.cardinalVector, apple.numCollected);
     // }
 
     if (apple.canPlayerClaimApple(player)) {
@@ -99,6 +94,10 @@ ticker.add((delta) => {
     buffer.add(player);
     buffer.add(apple);
 
+    buffer.add(new Line(new Point(5, 5), new Point(20, 5)));
+    // buffer.add(new PolyLine([new Point(5, 5), new Point(20, 5), new Point(20, 10), new Point(10, 0)]));
+    buffer.add(skullContainer);
+    skull.next(10 * delta.deltaTime);
     // if (player.isAlive === false) {
     // skull.next(10 * delta.deltaTime);
     //     buffer.add(skullContainer);
@@ -109,7 +108,7 @@ ticker.add((delta) => {
 });
 
 // debug helper
-ticker.add(DisplayKeyboardInput(input));
+// ticker.add(DisplayKeyboardInput(input));
 
 const FPSDom = document.querySelector(".fps");
 if (FPSDom) {
