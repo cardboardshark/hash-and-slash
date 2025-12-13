@@ -94,8 +94,9 @@ export class Canvas {
 
         if (this.debugMode) {
             const debugRect = new DebugRectangle(this.#config.width, this.#config.height);
+            console.log(debugRect.toRenderable());
             screen.merge(this.#renderShape(debugRect.toRenderable()), {
-                offset: new Point(-3, -3),
+                offset: new Point(0, 0).subtract(debugRect.offset),
             });
         }
 

@@ -56,25 +56,26 @@ export class Buffer {
         // mergers may result in pixels being unsorted
         const sortedPixels = sortBy(croppedPixels, ["y", "x"]);
 
-        const dimensions = calculateBoundingBoxFromPoints(sortedPixels);
-        let output = "";
-        for (let y = dimensions.top; y < dimensions.height; y += 1) {
-            for (let x = dimensions.left; x < dimensions.width; x += 1) {
-                const point = { x, y };
-                const pixel = this.pixelMap.get(this.#flatKey(point));
-                if (pixel === undefined || pixel.value === null) {
-                    output += fill;
-                } else {
-                    output += pixel.value;
-                }
+        let lastY: number | undefined;
+        return sortedPixels.reduce((output, pixel) => {
+            if (lastY === undefined) {
+                lastY = pixel.y;
             }
-            output += "\n";
-        }
-        return output;
+            if (pixel.y !== lastY) {
+                output += "\n";
+                lastY = pixel.y;
+            }
+            if (pixel.value === null) {
+                output += fill;
+            } else {
+                output += pixel.value;
+            }
+
+            return output;
+        }, "");
     }
 
-    merge(incomingBuffer: Buffer, optionsProp: MergeOptions = {}) {
-        const options = { lockTransparentPixels: false, ...optionsProp };
+    merge(incomingBuffer: Buffer, options: MergeOptions = {}) {
         incomingBuffer.pixelMap.forEach((p) => {
             if (p.value !== BLANK_CHARACTER && p.value !== null) {
                 const composedPoint = options.offset
@@ -86,7 +87,7 @@ export class Buffer {
                 const isInRange = options.limit === undefined || isPointInsideRectangle(composedPoint, options.limit);
                 if (isInRange) {
                     const hasPixel = this.pixelMap.has(this.#flatKey(composedPoint));
-                    const canUpdateOrInsertPixel = options.lockTransparentPixels === false || hasPixel;
+                    const canUpdateOrInsertPixel = hasPixel || options.lockTransparentPixels !== true;
                     if (canUpdateOrInsertPixel) {
                         this.pixelMap.set(this.#flatKey(composedPoint), { x: composedPoint.x, y: composedPoint.y, value: p.value });
                     }
