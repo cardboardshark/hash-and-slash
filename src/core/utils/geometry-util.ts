@@ -83,8 +83,8 @@ export function trimPointsToLength(points: PointLike[], maxLength: number) {
 }
 
 export function isPointInsideRectangle(point: PointLike, shape: Rectangle) {
-    const isInXRange = point.x >= shape.point.x && point.x < shape.point.x + shape.width;
-    const isInYRange = point.y >= shape.point.y && point.y < shape.point.y + shape.height;
+    const isInXRange = point.x >= shape.position.x && point.x < shape.position.x + shape.width;
+    const isInYRange = point.y >= shape.position.y && point.y < shape.position.y + shape.height;
     return isInXRange && isInYRange;
 }
 
@@ -112,7 +112,7 @@ export function calculateBoundingBoxFromPoints(points: PointLike[]): BoundingBox
 
     return {
         ...dimensions,
-        width: 1 + dimensions.right - dimensions.left,
-        height: 1 + dimensions.bottom - dimensions.top,
+        width: dimensions.right - dimensions.left,
+        height: dimensions.bottom - dimensions.top,
     };
 }

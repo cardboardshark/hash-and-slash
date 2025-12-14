@@ -1,7 +1,9 @@
 import { Buffer } from "@/core/pipeline/buffer";
 import { Point } from "@/core/primitives/point";
+import { Shader } from "@/core/shaders/shader";
+import { Texture } from "@/core/shaders/texture";
 import { Pixel } from "@/core/types/canvas-types";
-import { PointLike } from "@/core/types/primitive-types";
+import { PointLike, TextureOptions } from "@/core/types/primitive-types";
 import { calculateBoundingBoxFromPoints, calculateRadianBetweenPoints, convertRadianToVector } from "@/core/utils/geometry-util";
 import { calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
 
@@ -9,6 +11,8 @@ export class Line {
     start;
     end;
     fill = "l";
+    texture?: string | TextureOptions | Texture;
+    shaders: Shader[] = [];
 
     constructor(p0: PointLike, p1: PointLike) {
         this.start = new Point(p0);

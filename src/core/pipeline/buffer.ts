@@ -14,7 +14,7 @@ interface MergeOptions {
 interface toStringOptions {
     fill?: string;
     crop?: {
-        point: PointLike;
+        position: PointLike;
         width: number;
         height: number;
     };
@@ -33,8 +33,8 @@ export class Buffer {
     }
 
     fillRectangle(rect: Rectangle, value: string | number | null = null) {
-        for (let y = rect.point.y; y < rect.height; y += 1) {
-            for (let x = rect.point.x; x < rect.width; x += 1) {
+        for (let y = rect.position.y; y < rect.height; y += 1) {
+            for (let x = rect.position.x; x < rect.width; x += 1) {
                 const point = { x, y, value };
                 this.pixelMap.set(this.#flatKey(point), point);
             }
@@ -49,7 +49,7 @@ export class Buffer {
     toString({ crop, fill = " " }: toStringOptions = {}) {
         let croppedPixels = Array.from(this.pixelMap.values());
         if (crop) {
-            const cropRectangle = new Rectangle(crop.point, crop.width, crop.height);
+            const cropRectangle = new Rectangle(crop.position, crop.width, crop.height);
             croppedPixels = croppedPixels.filter((pixel) => isPointInsideRectangle(pixel, cropRectangle));
         }
 

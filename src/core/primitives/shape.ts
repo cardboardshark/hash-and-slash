@@ -14,15 +14,21 @@ export abstract class Shape {
     origin?: string;
     fill: number | string | null = "?";
     texture?: string | TextureOptions | Texture;
+    shaders: Shader[] = [];
+
+    collision?: {
+        type: "static" | "rigid";
+        body: Shape;
+    };
     _debug: boolean = false;
 
-    get point() {
+    get position() {
         return new Point(this.x, this.y);
     }
 
-    get originPoint() {
+    get originPosition() {
         if (this.origin == undefined) {
-            return this.point;
+            return this.position;
         }
 
         const dimensions = this.boundingBox;
@@ -42,7 +48,7 @@ export abstract class Shape {
             offsetY = originOffset.y.value;
         }
 
-        return this.point.add(new Point(offsetX, offsetY));
+        return this.position.add(new Point(offsetX, offsetY));
     }
 
     setOrigin(value?: string) {
@@ -51,6 +57,4 @@ export abstract class Shape {
     }
 
     abstract toBuffer(): Buffer;
-
-    shaders: Shader[] = [];
 }

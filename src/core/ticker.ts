@@ -50,6 +50,13 @@ export class Ticker {
         window.addEventListener("focus", () => {
             this.windowBlurred = false;
         });
+
+        // toggle execution if the user hit escape
+        document.addEventListener("keydown", (e) => {
+            if (e.code === "Escape") {
+                this.paused = !this.paused;
+            }
+        });
     }
 
     update(currentTime: number = performance.now()) {

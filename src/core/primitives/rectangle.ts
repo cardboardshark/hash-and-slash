@@ -5,8 +5,6 @@ import { Shape } from "@/core/primitives/shape";
 import { PointLike } from "@/core/types/primitive-types";
 
 export class Rectangle extends Shape {
-    x;
-    y;
     width;
     height;
     fill = "r";
@@ -23,13 +21,13 @@ export class Rectangle extends Shape {
     get lines() {
         return [
             // top
-            new Line(this.point, this.point.add({ x: this.width, y: 0 })),
+            new Line(this.position, this.position.add({ x: this.width, y: 0 })),
             // right
-            new Line(this.point.add({ x: this.width, y: 0 }), this.point.add({ x: this.width, y: this.height })),
+            new Line(this.position.add({ x: this.width, y: 0 }), this.position.add({ x: this.width, y: this.height })),
             // bottom
-            new Line(this.point.add({ x: 0, y: this.height }), this.point.add({ x: this.width, y: this.height })),
+            new Line(this.position.add({ x: 0, y: this.height }), this.position.add({ x: this.width, y: this.height })),
             // left
-            new Line(this.point, this.point.add({ x: 0, y: this.height })),
+            new Line(this.position, this.position.add({ x: 0, y: this.height })),
         ];
     }
 
@@ -40,10 +38,10 @@ export class Rectangle extends Shape {
 
     get boundingBox() {
         return {
-            left: this.point.x,
-            right: this.point.x + this.width,
-            bottom: this.point.y + this.height,
-            top: this.point.y,
+            left: this.position.x,
+            right: this.position.x + this.width,
+            bottom: this.position.y + this.height,
+            top: this.position.y,
             width: this.width,
             height: this.height,
         };

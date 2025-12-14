@@ -12,7 +12,7 @@ interface SpriteSheetOptions {
 }
 
 export class Sprite implements RenderableEntity {
-    point;
+    position;
     index;
     content;
     frameWidth: number;
@@ -20,7 +20,7 @@ export class Sprite implements RenderableEntity {
     numFrames: number;
 
     constructor(point: PointLike, { content, initialIndex = 0, frameWidth, frameHeight, numFrames }: SpriteSheetOptions) {
-        this.point = point;
+        this.position = point;
         this.index = initialIndex;
         this.content = content;
         this.frameWidth = frameWidth;
@@ -59,7 +59,7 @@ export class Sprite implements RenderableEntity {
 
         const currentIndex = Math.floor(this.index) % this.numFrames;
 
-        const rect = new Rectangle(this.point, this.frameWidth, this.frameHeight);
+        const rect = new Rectangle(this.position, this.frameWidth, this.frameHeight);
         rect.texture = { src: frames.at(currentIndex) ?? "error", fill: BLANK_CHARACTER };
         return rect;
     }

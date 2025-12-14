@@ -15,7 +15,7 @@ export class Apple implements RenderableEntity {
     }
 
     canPlayerClaimApple(player: Player) {
-        return player.point.roughlyEquals(this.position);
+        return player.position.roughlyEquals(this.position);
     }
 
     claimApple() {

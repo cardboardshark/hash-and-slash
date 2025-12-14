@@ -1,4 +1,4 @@
-import { BLANK_CHARACTER } from "@/core/core-constants";
+import { App } from "@/core/app";
 import { Buffer } from "@/core/pipeline/buffer";
 import { DebugRectangle } from "@/core/pipeline/debug-rectangle";
 import { Container } from "@/core/primitives/container";
@@ -11,42 +11,51 @@ import { Texture } from "@/core/shaders/texture";
 import { isRenderableEntity } from "@/core/types/primitive-types";
 import { isBoundingBoxWithinRectangle } from "@/core/utils/collision-util";
 
-interface CanvasConfig {
+interface CanvasOptions {
     width: number;
     height: number;
     element: HTMLElement | null;
     fill?: string;
+    debugMode?: boolean;
 }
 export class Canvas {
-    #config;
     debugMode = false;
+    element: HTMLElement | null = null;
+    width = 0;
+    height = 0;
 
-    constructor(config: CanvasConfig) {
-        this.#config = config;
+    static _key = Symbol("private key");
+
+    constructor(options: CanvasOptions, key: Symbol) {
+        this.width = options.width;
+        this.height = options.height;
+        this.element = options.element;
+        this.debugMode = options.debugMode ?? false;
+
+        if (key !== Canvas._key) {
+            throw new Error("Canvas singleton must be initialized with Canvas.make()");
+        }
     }
 
-    get width() {
-        return this.#config.width;
-    }
-
-    get height() {
-        return this.#config.height;
+    static make(options: CanvasOptions) {
+        const canvas = new Canvas(options, Canvas._key);
+        // Set the active canvas to the App singleton
+        App.canvas = canvas;
+        return canvas;
     }
 
     #renderShape(shape: Shape) {
         const buffer = shape.toBuffer();
         if (shape.texture) {
-            let itemTexture;
             if (shape.texture instanceof Texture) {
-                itemTexture = shape.texture;
+                shape.texture.apply(buffer);
             }
             if (typeof shape.texture === "object") {
-                itemTexture = new Texture(shape.texture);
+                new Texture(shape.texture).apply(buffer);
             }
             if (typeof shape.texture === "string") {
-                itemTexture = new Texture({ src: shape.texture });
+                new Texture({ src: shape.texture }).apply(buffer);
             }
-            itemTexture?.apply(buffer);
         }
         for (let i = 0; i < shape.shaders.length; i += 1) {
             shape.shaders[i].apply(buffer);
@@ -66,17 +75,17 @@ export class Canvas {
                 } else {
                     resultContainer = new Container(Array.isArray(result) ? result : [result]);
                 }
-                resultContainer.set(container.point);
+                resultContainer.set(container.position);
                 this.#recursiveDraw(resultContainer, screen, screenRect);
             } else {
                 if (item instanceof Shape && isBoundingBoxWithinRectangle(item.boundingBox, screenRect)) {
                     screen.merge(this.#renderShape(item), {
-                        offset: container.point.add(item.originPoint),
+                        offset: container.position.add(item.originPosition),
                         limit: screenRect,
                     });
                 } else if (item instanceof Line || item instanceof PolyLine) {
                     screen.merge(item.toBuffer(), {
-                        offset: container.point,
+                        offset: container.position,
                         limit: screenRect,
                     });
                 } else {
@@ -88,32 +97,31 @@ export class Canvas {
     }
 
     draw(container: Container) {
-        const screenRect = new Rectangle(Point.ZeroZero, this.#config.width, this.#config.height);
+        const screenRect = new Rectangle(Point.ZeroZero, this.width, this.height);
         let screen = new Buffer();
         screen.fillRectangle(screenRect);
 
         if (this.debugMode) {
-            const debugRect = new DebugRectangle(this.#config.width, this.#config.height);
-            console.log(debugRect.toRenderable());
+            const debugRect = new DebugRectangle(this.width, this.height);
             screen.merge(this.#renderShape(debugRect.toRenderable()), {
                 offset: new Point(0, 0).subtract(debugRect.offset),
             });
         }
 
-        screen.deleteRectangle(screenRect);
         this.#recursiveDraw(container, screen, screenRect);
 
-        if (!this.#config.element) {
+        if (!this.element) {
+            console.log(this.element);
             throw new Error("Unable to locate canvas element.");
         }
-        this.#config.element.style.setProperty("--width", String(this.#config.width));
-        this.#config.element.style.setProperty("--height", String(this.#config.height));
+        this.element.style.setProperty("--width", String(this.width));
+        this.element.style.setProperty("--height", String(this.height));
 
         const output = screen.toString();
 
         // skip writes if nothing changed
-        if (this.#config.element.innerHTML !== output) {
-            this.#config.element.innerHTML = output;
+        if (this.element.innerHTML !== output) {
+            this.element.innerHTML = output;
         }
     }
 }

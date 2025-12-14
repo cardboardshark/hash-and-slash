@@ -1,3 +1,5 @@
+import { RigidBody } from "@/core/physics/rigid-body";
+import { StaticBody } from "@/core/physics/static-body";
 import { Container } from "@/core/primitives/container";
 import { Line } from "@/core/primitives/line";
 import { PolyLine } from "@/core/primitives/poly-line";
@@ -5,6 +7,7 @@ import { Polygon } from "@/core/primitives/polygon";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Text } from "@/core/primitives/text";
 
+export type PhysicsBody = StaticBody | RigidBody;
 export type PointLike = { x: number; y: number };
 
 export type RenderableEntity = { toRenderable: () => Omit<Renderable, "RenderableEntity"> };

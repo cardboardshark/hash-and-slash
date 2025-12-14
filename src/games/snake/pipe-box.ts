@@ -5,26 +5,26 @@ import type { RenderableEntity, PointLike } from "@/core/types/primitive-types";
 
 export class PipeBox implements RenderableEntity {
     fill = BLANK_CHARACTER;
-    point;
+    position;
     width;
     height;
 
     constructor(point: PointLike, width: number, height: number) {
-        this.point = point;
+        this.position = point;
         this.width = width;
         this.height = height;
     }
 
     get rectangle() {
-        return new Rectangle(this.point, this.width, this.height);
+        return new Rectangle(this.position, this.width, this.height);
     }
 
     toRenderable() {
         const dimensions = {
-            left: this.point.x,
-            top: this.point.y,
-            bottom: this.point.y + this.height,
-            right: this.point.x + this.width,
+            left: this.position.x,
+            top: this.position.y,
+            bottom: this.position.y + this.height,
+            right: this.position.x + this.width,
         };
         let content = "";
         for (let y = 0; y < this.height; y++) {
@@ -56,7 +56,7 @@ export class PipeBox implements RenderableEntity {
             content += "\n";
         }
 
-        const rect = new Rectangle(this.point, this.width, this.height);
+        const rect = new Rectangle(this.position, this.width, this.height);
         rect.texture = { src: content, fill: BLANK_CHARACTER };
         return rect;
     }

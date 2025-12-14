@@ -1,6 +1,6 @@
 import { Line } from "@/core/primitives/line";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { BoundingBox } from "@/core/types/primitive-types";
+import { BoundingBox, PhysicsBody } from "@/core/types/primitive-types";
 
 /**
  * Determine if two Axis-aligned bounding box elements have overlapping pixels.
@@ -21,6 +21,22 @@ import { BoundingBox } from "@/core/types/primitive-types";
 //     return aRect.x < bRect.x + bRect.width && aRect.x + aRect.width > bRect.x && aRect.y < bRect.y + bRect.height && aRect.y + aRect.height > bRect.y;
 // }
 
+export function doBodiesOverlap(bodyA: PhysicsBody, bodyB: PhysicsBody) {
+    const aRect = {
+        x: bodyA.boundingBox.left,
+        y: bodyA.boundingBox.top,
+        width: bodyA.boundingBox.width,
+        height: bodyA.boundingBox.height,
+    };
+    const bRect = {
+        x: bodyB.boundingBox.left,
+        y: bodyB.boundingBox.top,
+        width: bodyB.boundingBox.width,
+        height: bodyB.boundingBox.height,
+    };
+    return aRect.x < bRect.x + bRect.width && aRect.x + aRect.width > bRect.x && aRect.y < bRect.y + bRect.height && aRect.y + aRect.height > bRect.y;
+}
+
 export function isBoundingBoxWithinRectangle(box: BoundingBox, rect: Rectangle) {
     const aRect = {
         x: box.left,
@@ -29,10 +45,10 @@ export function isBoundingBoxWithinRectangle(box: BoundingBox, rect: Rectangle) 
         height: box.height,
     };
     const bRect = {
-        x: rect.point.x,
-        y: rect.point.y,
-        width: rect.point.x + rect.width,
-        height: rect.point.y + rect.height,
+        x: rect.position.x,
+        y: rect.position.y,
+        width: rect.position.x + rect.width,
+        height: rect.position.y + rect.height,
     };
     return aRect.x < bRect.x + bRect.width && aRect.x + aRect.width > bRect.x && aRect.y < bRect.y + bRect.height && aRect.y + aRect.height > bRect.y;
 }

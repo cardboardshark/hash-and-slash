@@ -5,6 +5,7 @@ import { RenderableEntity } from "@/core/types/primitive-types";
 export class DebugRectangle implements RenderableEntity {
     width;
     height;
+
     constructor(width: number, height: number) {
         this.width = width;
         this.height = height;
@@ -30,10 +31,9 @@ export class DebugRectangle implements RenderableEntity {
             rows.at(0)?.push(firstRowChar);
             rows.at(1)?.push(secondRowChar);
             rows.at(2)?.push("↓");
-
-            rows.at(totalHeight - 3)?.push("↑");
-            rows.at(totalHeight - 2)?.push(secondRowChar);
-            rows.at(totalHeight - 1)?.push(firstRowChar);
+            rows.at(-3)?.push("↑");
+            rows.at(-1)?.push(secondRowChar);
+            rows.at(-2)?.push(firstRowChar);
         }
         const content = rows
             .map((row, rowIndex) => {

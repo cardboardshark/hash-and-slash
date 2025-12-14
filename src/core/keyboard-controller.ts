@@ -65,6 +65,10 @@ export class KeyboardController {
         return new Point(vector ?? Point.ZeroZero);
     }
 
+    isDeadStick() {
+        return this.vector.equals(Point.ZeroZero);
+    }
+
     #keydownHandler(event: KeyboardEvent) {
         if (Object.hasOwn(keyMap, event.code) === false) {
             return;

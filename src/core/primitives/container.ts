@@ -22,7 +22,7 @@ export class Container {
         this.children.unshift(value);
     }
 
-    get point() {
+    get position() {
         return new Point(this.x, this.y);
     }
 
