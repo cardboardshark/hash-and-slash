@@ -1,9 +1,10 @@
+import { Node2d } from "@/core/primitives/node-2d";
 import { Point } from "@/core/primitives/point";
 import { BoundingBox, PhysicsBody } from "@/core/types/primitive-types";
 
 let previousId = -1;
-export class RigidBody {
-    id: number;
+export class RigidBody extends Node2d {
+    rid: number;
     vector = new Point(Point.ZeroZero);
     constantForce?: Point;
     inertia = 0;
@@ -13,7 +14,8 @@ export class RigidBody {
     boundingBoxRef?: BoundingBox;
 
     constructor() {
-        this.id = previousId + 1;
+        super();
+        this.rid = previousId + 1;
         previousId += 1;
     }
 

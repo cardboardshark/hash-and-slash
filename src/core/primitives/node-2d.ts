@@ -6,8 +6,9 @@ import { mergeBoundingBoxes } from "@/core/utils/geometry-util";
 let id = -1;
 export class Node2d {
     id: string;
+    x = 0;
+    y = 0;
     nodeId: number;
-    position: Point = new Point(Point.ZeroZero);
     children: Node2d[] = [];
     body?: PhysicsBody;
 
@@ -18,8 +19,21 @@ export class Node2d {
     }
 
     set(point: PointLike) {
-        this.position.x = point.x;
-        this.position.y = point.y;
+        this.x = point.x;
+        this.y = point.y;
+    }
+
+    get position(): Point {
+        return new Point(Math.floor(this.x), Math.floor(this.y));
+    }
+
+    get precisePosition() {
+        return new Point(this.x, this.y);
+    }
+
+    set position(point: PointLike) {
+        this.x = point.x;
+        this.y = point.y;
     }
 
     appendChild(node: Node2d) {
@@ -42,9 +56,6 @@ export class Node2d {
     }
 
     _draw() {
-        if (this.id.startsWith("Node2d") === false) {
-            console.log("Node2d draw", this.nodeId, this.id, this);
-        }
         const buffer = new DrawBuffer();
         // current scope
         buffer.merge(this.draw(), { offset: this.position });

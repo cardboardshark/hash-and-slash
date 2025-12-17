@@ -1,8 +1,7 @@
 import { RigidBody } from "@/core/physics/rigid-body";
-import { Node2d } from "@/core/primitives/node-2d";
 import { Point } from "@/core/primitives/point";
 import { Text } from "@/core/primitives/text";
-import type { BoundingBox, PhysicsBody, PointLike, RenderableEntity } from "@/core/types/primitive-types";
+import type { PhysicsBody, PointLike } from "@/core/types/primitive-types";
 import type { TickerDelta } from "@/core/types/ticker-types";
 import { calculateBoundingBoxFromPoints } from "@/core/utils/geometry-util";
 import { Trail } from "@/games/snake/trail";
@@ -11,11 +10,12 @@ interface PlayerOptions {
     initialVector?: PointLike;
     initialSpeed?: number;
 }
-export class Player extends Node2d implements RenderableEntity {
+export class Player extends RigidBody {
     static InitialSpeed = 1;
     static InitialMaxTrailLength = 5;
     // toggle to allow player to turn back
     allowReversing = false;
+    inertia = 1;
 
     // trail;
     fill = "█";
@@ -27,8 +27,6 @@ export class Player extends Node2d implements RenderableEntity {
         // this.trail.add(initialPosition);
 
         this.set(initialPosition);
-        this.body = new RigidBody();
-        this.body.setBoundingBox(this.boundingBox);
     }
 
     bodyEntered(other: PhysicsBody) {
@@ -62,15 +60,18 @@ export class Player extends Node2d implements RenderableEntity {
         // }
     }
 
-    toRenderable() {
-        const container = new Node2d();
+    get boundingBox() {
+        return calculateBoundingBoxFromPoints([this.position]);
+    }
+
+    draw() {
+        // const container = new Node2d();
 
         // const trail = this.trail.line;
         // trail.fill = "-";
 
         // container.add(trail);
-        container.appendChild(new Text(this.position, this.fill));
-
-        return container;
+        // container.appendChild();
+        return new Text(this.position, this.fill).draw();
     }
 }

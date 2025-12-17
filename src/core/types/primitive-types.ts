@@ -10,8 +10,6 @@ import { Text } from "@/core/primitives/text";
 export type PhysicsBody = StaticBody | RigidBody;
 export type PointLike = { x: number; y: number };
 
-export type RenderableEntity = { toRenderable: () => Omit<Renderable, "RenderableEntity"> };
-
 export interface TextOptions {
     align?: "left" | "center" | "right";
     width?: number;
@@ -19,14 +17,10 @@ export interface TextOptions {
     fill?: string;
 }
 
-export type Renderable = Node2d | Line | PolyLine | Rectangle | Polygon | Text | RenderableEntity;
+export type Renderable = Node2d | Line | PolyLine | Rectangle | Polygon | Text;
 
 export function isPointLike(shape: unknown): shape is PointLike {
     return typeof shape === "object" && shape !== null && "x" in shape && "y" in shape;
-}
-
-export function isRenderableEntity(shape: unknown): shape is RenderableEntity {
-    return typeof shape === "object" && shape !== null && "toRenderable" in shape;
 }
 
 export interface BoundingBox {

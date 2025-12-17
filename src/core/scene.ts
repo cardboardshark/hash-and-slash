@@ -1,6 +1,7 @@
 import { RigidBody } from "@/core/physics/rigid-body";
 import { StaticBody } from "@/core/physics/static-body";
 import { Line } from "@/core/primitives/line";
+import { Node2d } from "@/core/primitives/node-2d";
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { RayCaster } from "@/core/ray-caster";
@@ -9,39 +10,49 @@ import { TickerDelta } from "@/core/types/ticker-types";
 import { doBodiesOverlap } from "@/core/utils/collision-util";
 
 const COLLISION_HULL_THICKNESS = 0.5;
-export class Scene {
-    #bodies: PhysicsBody[] = [];
+export class Scene extends Node2d {
+    id = "scene";
 
-    constructor() {}
+    #bodyRegistry = new Set<PhysicsBody>();
 
-    add(item: PhysicsBody) {
-        this.#bodies.push(item);
+    appendChild(node: Node2d) {
+        if (node instanceof RigidBody || node instanceof StaticBody) {
+            this.#bodyRegistry.add(node);
+        }
+        return super.appendChild(node);
+    }
+    removeChild(node: Node2d) {
+        if (node instanceof RigidBody || node instanceof StaticBody) {
+            this.#bodyRegistry.delete(node);
+        }
+        return super.removeChild(node);
     }
 
     process(delta: TickerDelta) {
-        const rigidBodies = this.#bodies.filter((body) => body instanceof RigidBody);
+        const allBodies = Array.from(this.#bodyRegistry);
+        const rigidBodies = allBodies.filter((body) => body instanceof RigidBody);
 
-        rigidBodies.forEach((item) => {
-            let initialPosition = item.position.clone();
-            let currentPosition = item.position.clone();
+        rigidBodies.forEach((body) => {
+            let initialPosition = body.position.clone();
+            let currentPosition = body.position.clone();
 
-            if (item.constantForce) {
-                const constantForceVector = item.constantForce.multiplyScalar(item.inertia * delta.deltaMS);
-                currentPosition = item.position.add(constantForceVector);
+            if (body.constantForce) {
+                const constantForceVector = body.constantForce.multiplyScalar(body.inertia * delta.deltaMS);
+                currentPosition = body.precisePosition.add(constantForceVector);
             }
-
+            // console.log(initialPosition, currentPosition);
             if (initialPosition.equals(currentPosition) === false) {
-                item.position = currentPosition;
+                body.position = currentPosition;
 
                 // fast loose check
-                const bodiesWithBoundingBoxContact = this.#bodies.filter((other) => other !== item && doBodiesOverlap(item, other));
+                const bodiesWithBoundingBoxContact = allBodies.filter((other) => other !== body && doBodiesOverlap(body, other));
 
                 // more detailed check
                 const raysWithBodyContact = new Map<PhysicsBody, RayCaster>();
 
                 let staticContact: PhysicsBody | undefined;
                 bodiesWithBoundingBoxContact.forEach((other) => {
-                    if (item.constantForce) {
+                    if (body.constantForce) {
                         const travelRay = new Line(initialPosition, currentPosition);
 
                         const otherRect = new Rectangle(
@@ -62,12 +73,12 @@ export class Scene {
                 if (staticContact) {
                     // bounce off solid object
                     const ray = raysWithBodyContact.get(staticContact);
-                    if (ray?.firstIntersection && item.constantForce) {
+                    if (ray?.firstIntersection && body.constantForce) {
                         // hacky
                         // if (item.constantForce.x > 0 || item.constantForce.y > 0) {
 
-                        const reverseVector = new Point(ray.firstIntersection.point).subtract(item.constantForce.add(ray.firstIntersection.point));
-                        item.position = ray.firstIntersection.point.add(reverseVector);
+                        const reverseVector = new Point(ray.firstIntersection.point).subtract(body.constantForce.add(ray.firstIntersection.point));
+                        body.position = ray.firstIntersection.point.add(reverseVector);
                         console.log("hmssssada", reverseVector);
                         // } else {
                         //     item.position = ray.firstIntersection.point;
@@ -78,20 +89,20 @@ export class Scene {
                         // console.log("safe", ray.firstIntersection.point, safePoint);
                     }
 
-                    item.bodyEntered(staticContact);
+                    body.bodyEntered(staticContact);
                 } else {
                     // pass through rigid object
                     raysWithBodyContact.forEach((_ray, other) => {
-                        if (item.contacts.has(other) === false) {
-                            item.contacts.add(other);
-                            item.bodyEntered(other);
+                        if (body.contacts.has(other) === false) {
+                            body.contacts.add(other);
+                            body.bodyEntered(other);
                         }
                     });
 
-                    item.contacts.forEach((other) => {
+                    body.contacts.forEach((other) => {
                         if (bodiesWithBoundingBoxContact.includes(other) === false) {
-                            item.contacts.delete(other);
-                            item.bodyExited(other);
+                            body.contacts.delete(other);
+                            body.bodyExited(other);
                         }
                     });
                 }

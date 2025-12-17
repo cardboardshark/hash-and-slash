@@ -12,8 +12,8 @@ export class Wall extends StaticBody {
         this.position = rect.position;
     }
 
-    toRenderable() {
-        return this.rect;
+    draw() {
+        return this.rect.draw();
     }
 
     get boundingBox() {
