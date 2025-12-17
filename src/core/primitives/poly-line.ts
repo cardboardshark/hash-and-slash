@@ -1,4 +1,4 @@
-import { Buffer } from "@/core/pipeline/buffer";
+import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 
@@ -65,7 +65,7 @@ export class PolyLine {
         return this.lines.reduce((sum, l) => sum + l.length, 0);
     }
 
-    toBuffer() {
+    draw() {
         let pixels: Pixel[] = [];
         this.lines.forEach((l) => {
             const diagonalDistance = calculateDiagonalDistance(l.start, l.end);
@@ -80,7 +80,7 @@ export class PolyLine {
             }
         });
 
-        return new Buffer(pixels);
+        return new DrawBuffer(pixels);
     }
 
     get boundingBox() {

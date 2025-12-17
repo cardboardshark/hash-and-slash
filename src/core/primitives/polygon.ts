@@ -1,5 +1,5 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
-import { Buffer } from "@/core/pipeline/buffer";
+import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
@@ -19,8 +19,7 @@ export class Polygon extends Shape {
 
         this.points = points;
 
-        this.x = this.points[0].x;
-        this.y = this.points[0].y;
+        this.set({ x: this.points[0].x, y: this.points[0].y });
 
         this.boundingBox = Polygon.calculateBoundingBox(this);
     }
@@ -54,8 +53,8 @@ export class Polygon extends Shape {
         return this.points[this.points.length - 1];
     }
 
-    toBuffer() {
-        // the polygon algorithm handles grids in a different format to toBuffer.
+    draw() {
+        // the polygon algorithm handles grids in a different format to a DrawBuffer.
         const multiDimensionalGrid = Array.from({ length: this.boundingBox.height }, () =>
             Array.from({ length: this.boundingBox.width }, () => BLANK_CHARACTER)
         );
@@ -83,8 +82,7 @@ export class Polygon extends Shape {
             }
         }
 
-        const grid = new Buffer();
-        grid.pixels = multiDimensionalGrid.reduce<Pixel[]>((acc, column, columnIndex) => {
+        const pixels = multiDimensionalGrid.reduce<Pixel[]>((acc, column, columnIndex) => {
             const rowPixels = column.map((character, rowIndex) => {
                 return {
                     x: rowIndex,
@@ -94,7 +92,7 @@ export class Polygon extends Shape {
             });
             return acc.concat(rowPixels);
         }, []);
-        return grid;
+        return new DrawBuffer(pixels);
     }
 
     static calculateBoundingBox(polygon: Polygon): BoundingBox {

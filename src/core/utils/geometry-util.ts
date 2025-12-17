@@ -19,6 +19,24 @@ export function calculateRadianBetweenPoints(p0: PointLike, p1: PointLike) {
     return result;
 }
 
+export function mergeBoundingBoxes(boxes: BoundingBox[]): BoundingBox {
+    const allPoints = boxes.reduce<Point[]>((acc, box) => {
+        // top left
+        acc.push(new Point(box.left, box.top));
+
+        // top right
+        acc.push(new Point(box.left + box.width, box.top));
+
+        // bottom left
+        acc.push(new Point(box.left, box.bottom));
+
+        // bottom right
+        acc.push(new Point(box.left + box.width, box.top));
+        return acc;
+    }, []);
+    return calculateBoundingBoxFromPoints(allPoints);
+}
+
 export function calculateVectorBetweenPoints(p0: PointLike, p1: PointLike) {
     const radian = calculateRadianBetweenPoints(p0, p1);
     return convertRadianToVector(radian);
@@ -89,26 +107,24 @@ export function isPointInsideRectangle(point: PointLike, shape: Rectangle) {
 }
 
 export function calculateBoundingBoxFromPoints(points: PointLike[]): BoundingBox {
-    const dimensions = points.reduce<BoundingBox>((acc, point) => {
-        acc.left ??= point.x;
-        acc.right ??= point.x;
-        acc.top ??= point.y;
-        acc.bottom ??= point.y;
-
-        if (point.x < acc.left) {
-            acc.left = point.x;
-        }
-        if (point.x > acc.right) {
-            acc.right = point.x;
-        }
-        if (point.y < acc.top) {
-            acc.top = point.y;
-        }
-        if (point.y > acc.bottom) {
-            acc.bottom = point.y;
-        }
-        return acc;
-    }, {} as BoundingBox);
+    const dimensions = points.reduce<BoundingBox>(
+        (acc, point) => {
+            if (point.x < acc.left) {
+                acc.left = point.x;
+            }
+            if (point.x > acc.right) {
+                acc.right = point.x;
+            }
+            if (point.y < acc.top) {
+                acc.top = point.y;
+            }
+            if (point.y > acc.bottom) {
+                acc.bottom = point.y;
+            }
+            return acc;
+        },
+        { left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0 }
+    );
 
     return {
         ...dimensions,

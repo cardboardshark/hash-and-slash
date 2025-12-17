@@ -1,4 +1,4 @@
-import { Buffer } from "@/core/pipeline/buffer";
+import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Point } from "@/core/primitives/point";
 import { Shader } from "@/core/shaders/shader";
 import { Texture } from "@/core/shaders/texture";
@@ -74,7 +74,7 @@ export class Line {
         return new Point(normalX / magnitude, normalY / magnitude);
     }
 
-    toBuffer() {
+    draw() {
         let pixels: Pixel[] = [];
         const diagonalDistance = calculateDiagonalDistance(this.start, this.end);
         for (let step = 0; step <= diagonalDistance; step++) {
@@ -86,7 +86,7 @@ export class Line {
                 value: String(this.fill).substring(0, 1),
             });
         }
-        return new Buffer(pixels);
+        return new DrawBuffer(pixels);
     }
 
     get boundingBox() {

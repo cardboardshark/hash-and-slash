@@ -1,6 +1,7 @@
 import { App } from "@/core/app";
 import { Canvas } from "@/core/canvas";
-import { Container } from "@/core/primitives/container";
+import { Node2d } from "@/core/primitives/node-2d";
+
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Sprite } from "@/core/primitives/sprite";
@@ -27,10 +28,19 @@ canvas.debugMode = true;
 /**
  * Entities
  */
-const player = new Player({ initialPosition: new Point(5, 3) });
-const wall = new Wall(new Rectangle(new Point(5, 5), 10, 10));
-App.scene.add(player);
-App.scene.add(wall);
+// const player = new Player({ initialPosition: new Point(5, 17) });
+const wall = new Wall(new Rectangle(new Point(8, 8), 10, 10));
+
+const topWall = new Wall(new Rectangle(new Point(0, 0), canvas.width, 1));
+const leftWall = new Wall(new Rectangle(new Point(0, 0), 1, canvas.height - 6));
+const rightWall = new Wall(new Rectangle(new Point(canvas.width - 1, 0), 1, canvas.height - 6));
+const bottomWall = new Wall(new Rectangle(new Point(0, canvas.height - 6), canvas.width, 1));
+
+// App.scene.add(player);
+// App.scene.add(wall);
+// App.scene.add(topWall);
+// App.scene.add(leftWall);
+// App.scene.add(bottomWall);
 
 const apple = new Apple({ x: 5, y: 5 });
 
@@ -46,11 +56,11 @@ const scoreText = new Text(new Point(scoreBox.position).add({ x: 1, y: 1 }), `\n
     fill: " ",
 });
 
-const liveArea = new PipeBox(Point.ZeroZero, canvas.width, canvas.height - 5);
-const scoreContainer = new Container([scoreBox, scoreText]);
+// const liveArea = new PipeBox(Point.ZeroZero, canvas.width, canvas.height - 5);
+const scoreContainer = new Node2d().setChildren([scoreBox, scoreText]);
 scoreContainer.set({ x: 0, y: canvas.height - 5 });
 
-const hud = new Container([liveArea, scoreContainer]);
+const hud = new Node2d().appendChild(scoreContainer);
 
 /**
  * Death Screen
@@ -61,19 +71,25 @@ const skull = new Sprite(new Point(2, 3), {
     frameHeight: 6,
     numFrames: 10,
 });
-const skullBox = new PipeBox(new Point(0, 0), 12, 9);
-const skullContainer = new Container([skullBox, new Text(new Point(2, 1), "u = dead"), skull]);
-skullContainer._debug = true;
-skullContainer.set(new Point(9, 8));
+skull.id = "sprite";
 
+const skullBox = new PipeBox(new Point(0, 0), 12, 9);
+skullBox.id = "skullbox";
+
+const skullContainer = new Node2d().setChildren([skullBox, new Text(new Point(2, 1), "u = dead"), skull]);
+skullContainer.set(new Point(9, 8));
+skullContainer.id = "skucontainer";
+
+const buffer = new Node2d();
+buffer.id = "root";
 /**
  * Game Loop
  */
 App.ticker.add((delta) => {
     // if (player.isAlive) {
-    if (App.input.isDeadStick() === false) {
-        player.constantForce = App.input.cardinalVector;
-    }
+    // if (App.input.isDeadStick() === false) {
+    //     player.constantForce = App.input.cardinalVector;
+    // }
 
     App.scene.process(delta);
     // player.move(delta, App.input.cardinalVector, apple.numCollected);
@@ -86,17 +102,18 @@ App.ticker.add((delta) => {
 
     scoreText.text = `\nMy score is: ${apple.numCollected}\n`;
 
-    const buffer = new Container();
+    buffer.appendChild(hud);
 
-    buffer.add(hud);
+    // buffer.appendChild(player);
+    // buffer.appendChild(wall);
+    // buffer.appendChild(topWall);
+    // buffer.appendChild(leftWall);
+    // buffer.appendChild(rightWall);
+    // buffer.appendChild(bottomWall);
+    // buffer.appendChild(apple);
 
-    console.log("hm", player.position);
-    buffer.add(player);
-    buffer.add(wall);
-    buffer.add(apple);
-
-    // buffer.add(skullContainer);
-    // skull.next(10 * delta.deltaTime);
+    buffer.appendChild(skullContainer);
+    skull.next(10 * delta.deltaTime);
     // if (player.isAlive === false) {
     // skull.next(10 * delta.deltaTime);
     //     buffer.add(skullContainer);

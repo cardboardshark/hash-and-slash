@@ -37,46 +37,51 @@ export class Scene {
                 const bodiesWithBoundingBoxContact = this.#bodies.filter((other) => other !== item && doBodiesOverlap(item, other));
 
                 // more detailed check
-                const bodiesWithRayContact = bodiesWithBoundingBoxContact.filter((other) => {
+                const raysWithBodyContact = new Map<PhysicsBody, RayCaster>();
+
+                let staticContact: PhysicsBody | undefined;
+                bodiesWithBoundingBoxContact.forEach((other) => {
                     if (item.constantForce) {
                         const travelRay = new Line(initialPosition, currentPosition);
-                        // collusion hull is slightly larger than bounding box
+
                         const otherRect = new Rectangle(
                             other.position.subtract(new Point(COLLISION_HULL_THICKNESS, COLLISION_HULL_THICKNESS)),
-                            other.boundingBox.width + COLLISION_HULL_THICKNESS,
-                            other.boundingBox.height + COLLISION_HULL_THICKNESS
+                            other.boundingBox.width,
+                            other.boundingBox.height
                         );
                         const travelIntersection = new RayCaster(travelRay, otherRect);
-                        return travelIntersection.hasIntersection;
+                        if (travelIntersection.hasIntersection) {
+                            raysWithBodyContact.set(other, travelIntersection);
+                            if (other instanceof StaticBody) {
+                                staticContact = other;
+                            }
+                        }
                     }
-
-                    return false;
                 });
-
-                const staticContact = bodiesWithRayContact.find((other) => other instanceof StaticBody);
 
                 if (staticContact) {
                     // bounce off solid object
-                    const travelRay = new Line(initialPosition, currentPosition);
+                    const ray = raysWithBodyContact.get(staticContact);
+                    if (ray?.firstIntersection && item.constantForce) {
+                        // hacky
+                        // if (item.constantForce.x > 0 || item.constantForce.y > 0) {
 
-                    // collusion hull is slightly larger than bounding box
-                    const otherRect = new Rectangle(
-                        staticContact.position.subtract(new Point(COLLISION_HULL_THICKNESS, COLLISION_HULL_THICKNESS)),
-                        staticContact.boundingBox.width + COLLISION_HULL_THICKNESS,
-                        staticContact.boundingBox.height + COLLISION_HULL_THICKNESS
-                    );
-                    const travelIntersection = new RayCaster(travelRay, otherRect);
+                        const reverseVector = new Point(ray.firstIntersection.point).subtract(item.constantForce.add(ray.firstIntersection.point));
+                        item.position = ray.firstIntersection.point.add(reverseVector);
+                        console.log("hmssssada", reverseVector);
+                        // } else {
+                        //     item.position = ray.firstIntersection.point;
+                        // }
 
-                    if (travelIntersection.firstIntersection && item.constantForce) {
-                        const safePoint = new Point(travelIntersection.firstIntersection.point).subtract(item.constantForce);
-                        item.position = safePoint;
-                        console.log("safe", safePoint);
+                        // item.position = ray.firstIntersection.point;
+                        // item.constantForce = new Point(Point.ZeroZero);
+                        // console.log("safe", ray.firstIntersection.point, safePoint);
                     }
 
                     item.bodyEntered(staticContact);
                 } else {
                     // pass through rigid object
-                    bodiesWithRayContact.forEach((other) => {
+                    raysWithBodyContact.forEach((_ray, other) => {
                         if (item.contacts.has(other) === false) {
                             item.contacts.add(other);
                             item.bodyEntered(other);

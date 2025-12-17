@@ -1,4 +1,5 @@
 import { Line } from "@/core/primitives/line";
+import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { BoundingBox, PhysicsBody } from "@/core/types/primitive-types";
 
@@ -87,5 +88,5 @@ export function findLineIntersection(lineA: Line, lineB: Line) {
     let x = x1 + ua * (x2 - x1);
     let y = y1 + ua * (y2 - y1);
 
-    return { x, y };
+    return new Point(x, y);
 }

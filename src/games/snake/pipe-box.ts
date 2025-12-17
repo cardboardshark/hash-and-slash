@@ -1,16 +1,16 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
+import { Node2d } from "@/core/primitives/node-2d";
+import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { Text } from "@/core/primitives/text";
-import type { RenderableEntity, PointLike } from "@/core/types/primitive-types";
 
-export class PipeBox implements RenderableEntity {
+export class PipeBox extends Node2d {
     fill = BLANK_CHARACTER;
-    position;
     width;
     height;
 
-    constructor(point: PointLike, width: number, height: number) {
-        this.position = point;
+    constructor(point: Point, width: number, height: number) {
+        super();
+        this.set(point);
         this.width = width;
         this.height = height;
     }
@@ -19,7 +19,7 @@ export class PipeBox implements RenderableEntity {
         return new Rectangle(this.position, this.width, this.height);
     }
 
-    toRenderable() {
+    draw() {
         const dimensions = {
             left: this.position.x,
             top: this.position.y,
@@ -58,6 +58,6 @@ export class PipeBox implements RenderableEntity {
 
         const rect = new Rectangle(this.position, this.width, this.height);
         rect.texture = { src: content, fill: BLANK_CHARACTER };
-        return rect;
+        return rect.draw();
     }
 }

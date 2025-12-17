@@ -2,16 +2,15 @@ import { Point } from "@/core/primitives/point";
 import { BoundingBox, PhysicsBody } from "@/core/types/primitive-types";
 
 let previousId = -1;
-export abstract class RigidBody {
+export class RigidBody {
     id: number;
     vector = new Point(Point.ZeroZero);
     constantForce?: Point;
     inertia = 0;
     // constantTorque?: number;
     linearDamp?: number;
-    position = new Point(Point.ZeroZero);
-    abstract boundingBox: BoundingBox;
     contacts = new Set<PhysicsBody>();
+    boundingBoxRef?: BoundingBox;
 
     constructor() {
         this.id = previousId + 1;
@@ -24,6 +23,17 @@ export abstract class RigidBody {
     // setConstantTorque(value: number) {
     //     this.constantTorque = value;
     // }
+
+    setBoundingBox(box: BoundingBox) {
+        this.boundingBoxRef = box;
+    }
+
+    get boundingBox() {
+        if (this.boundingBoxRef === undefined) {
+            throw new Error("RigidBody does not have defined BoundingBox");
+        }
+        return this.boundingBoxRef;
+    }
 
     applyImpulse(impulse: Point, position: Point) {}
 

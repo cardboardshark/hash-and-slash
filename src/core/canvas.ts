@@ -1,15 +1,11 @@
 import { App } from "@/core/app";
-import { Buffer } from "@/core/pipeline/buffer";
+import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { DebugRectangle } from "@/core/pipeline/debug-rectangle";
-import { Container } from "@/core/primitives/container";
-import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
-import { PolyLine } from "@/core/primitives/poly-line";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Shape } from "@/core/primitives/shape";
 import { Texture } from "@/core/shaders/texture";
-import { isRenderableEntity } from "@/core/types/primitive-types";
-import { isBoundingBoxWithinRectangle } from "@/core/utils/collision-util";
+import { Node2d } from "@/core/primitives/node-2d";
 
 interface CanvasOptions {
     width: number;
@@ -45,7 +41,7 @@ export class Canvas {
     }
 
     #renderShape(shape: Shape) {
-        const buffer = shape.toBuffer();
+        const buffer = shape.draw();
         if (shape.texture) {
             if (shape.texture instanceof Texture) {
                 shape.texture.apply(buffer);
@@ -63,52 +59,54 @@ export class Canvas {
         return buffer;
     }
 
-    #recursiveDraw(container: Container, screen: Buffer, screenRect: Rectangle) {
-        container.children.forEach((item) => {
-            if (item instanceof Container) {
-                this.#recursiveDraw(item, screen, screenRect);
-            } else if (isRenderableEntity(item)) {
-                const result = item.toRenderable();
-                let resultContainer: Container;
-                if (result instanceof Container) {
-                    resultContainer = result;
-                } else {
-                    resultContainer = new Container(Array.isArray(result) ? result : [result]);
-                }
-                resultContainer.set(container.position);
-                this.#recursiveDraw(resultContainer, screen, screenRect);
-            } else {
-                if (item instanceof Shape && isBoundingBoxWithinRectangle(item.boundingBox, screenRect)) {
-                    screen.merge(this.#renderShape(item), {
-                        offset: container.position.add(item.originPosition),
-                        limit: screenRect,
-                    });
-                } else if (item instanceof Line || item instanceof PolyLine) {
-                    screen.merge(item.toBuffer(), {
-                        offset: container.position,
-                        limit: screenRect,
-                    });
-                } else {
-                    console.log("out-of-bounds item culled from render", item);
-                }
-            }
-        });
-        return screen;
-    }
+    // #recursiveDraw(container: Node2d, screen: DrawBuffer, screenRect: Rectangle) {
+    //     container.children.forEach((item) => {
+    //         if (item instanceof Container) {
+    //             this.#recursiveDraw(item, screen, screenRect);
+    //         } else if (isRenderableEntity(item)) {
+    //             const result = item.toRenderable();
+    //             let resultContainer: Container;
+    //             if (result instanceof Container) {
+    //                 resultContainer = result;
+    //             } else {
+    //                 resultContainer = new Container(Array.isArray(result) ? result : [result]);
+    //             }
+    //             resultContainer.set(container.position);
+    //             this.#recursiveDraw(resultContainer, screen, screenRect);
+    //         } else {
+    //             if (item instanceof Shape && isBoundingBoxWithinRectangle(item.boundingBox, screenRect)) {
+    //                 screen.merge(this.#renderShape(item), {
+    //                     offset: container.position.add(item.originPosition),
+    //                     limit: screenRect,
+    //                 });
+    //             } else if (item instanceof Line || item instanceof PolyLine) {
+    //                 screen.merge(item.draw(), {
+    //                     offset: container.position,
+    //                     limit: screenRect,
+    //                 });
+    //             } else {
+    //                 console.log("out-of-bounds item culled from render", item);
+    //             }
+    //         }
+    //     });
+    //     return screen;
+    // }
 
-    draw(container: Container) {
+    draw(container: Node2d) {
         const screenRect = new Rectangle(Point.ZeroZero, this.width, this.height);
-        let screen = new Buffer();
+        let screen = new DrawBuffer();
         screen.fillRectangle(screenRect);
 
-        if (this.debugMode) {
-            const debugRect = new DebugRectangle(this.width, this.height);
-            screen.merge(this.#renderShape(debugRect.toRenderable()), {
-                offset: new Point(0, 0).subtract(debugRect.offset),
-            });
-        }
+        // if (this.debugMode) {
+        //     const debugRect = new DebugRectangle(this.width, this.height);
+        //     screen.merge(this.#renderShape(debugRect.toRenderable()), {
+        //         offset: new Point(0, 0).subtract(debugRect.offset),
+        //     });
+        // }
 
-        this.#recursiveDraw(container, screen, screenRect);
+        console.log("STARTING", container);
+        screen.merge(container._draw());
+        // this.#recursiveDraw(container, screen, screenRect);
 
         if (!this.element) {
             console.log(this.element);

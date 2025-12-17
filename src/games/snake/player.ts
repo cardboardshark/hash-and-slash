@@ -1,5 +1,5 @@
 import { RigidBody } from "@/core/physics/rigid-body";
-import { Container } from "@/core/primitives/container";
+import { Node2d } from "@/core/primitives/node-2d";
 import { Point } from "@/core/primitives/point";
 import { Text } from "@/core/primitives/text";
 import type { BoundingBox, PhysicsBody, PointLike, RenderableEntity } from "@/core/types/primitive-types";
@@ -11,7 +11,7 @@ interface PlayerOptions {
     initialVector?: PointLike;
     initialSpeed?: number;
 }
-export class Player extends RigidBody implements RenderableEntity {
+export class Player extends Node2d implements RenderableEntity {
     static InitialSpeed = 1;
     static InitialMaxTrailLength = 5;
     // toggle to allow player to turn back
@@ -23,12 +23,12 @@ export class Player extends RigidBody implements RenderableEntity {
 
     constructor({ initialPosition }: PlayerOptions) {
         super();
-
         // this.trail = new Trail(() => this.point.round(), Player.InitialMaxTrailLength);
         // this.trail.add(initialPosition);
 
-        this.position = new Point(initialPosition);
-        this.inertia = Player.InitialSpeed;
+        this.set(initialPosition);
+        this.body = new RigidBody();
+        this.body.setBoundingBox(this.boundingBox);
     }
 
     bodyEntered(other: PhysicsBody) {
@@ -63,25 +63,14 @@ export class Player extends RigidBody implements RenderableEntity {
     }
 
     toRenderable() {
-        const container = new Container();
+        const container = new Node2d();
 
         // const trail = this.trail.line;
         // trail.fill = "-";
 
         // container.add(trail);
-        container.add(new Text(this.position, this.fill));
+        container.appendChild(new Text(this.position, this.fill));
 
         return container;
-    }
-
-    get boundingBox(): BoundingBox {
-        return {
-            left: this.position.x,
-            right: this.position.x,
-            bottom: this.position.y,
-            top: this.position.y,
-            width: 1,
-            height: 1,
-        };
     }
 }

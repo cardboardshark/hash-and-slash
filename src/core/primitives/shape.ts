@@ -1,15 +1,12 @@
-import { Buffer } from "@/core/pipeline/buffer";
+import { Node2d } from "@/core/primitives/node-2d";
 import { Point } from "@/core/primitives/point";
 import { Shader } from "@/core/shaders/shader";
 import { Texture } from "@/core/shaders/texture";
-import { BoundingBox, TextureOptions } from "@/core/types/primitive-types";
+import { TextureOptions } from "@/core/types/primitive-types";
 import { lerp } from "@/core/utils/math-utils";
 import { parsePositionString } from "@/core/utils/string-util";
 
-export abstract class Shape {
-    x = 0;
-    y = 0;
-    abstract boundingBox: BoundingBox;
+export abstract class Shape extends Node2d {
     // defaults to top-left of element
     origin?: string;
     fill: number | string | null = "?";
@@ -21,10 +18,6 @@ export abstract class Shape {
         body: Shape;
     };
     _debug: boolean = false;
-
-    get position() {
-        return new Point(this.x, this.y);
-    }
 
     get originPosition() {
         if (this.origin == undefined) {
@@ -55,6 +48,4 @@ export abstract class Shape {
         this.origin = value;
         return this;
     }
-
-    abstract toBuffer(): Buffer;
 }

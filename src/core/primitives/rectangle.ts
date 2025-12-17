@@ -1,7 +1,8 @@
-import { Buffer } from "@/core/pipeline/buffer";
+import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { Shape } from "@/core/primitives/shape";
+import { Texture } from "@/core/shaders/texture";
 import { PointLike } from "@/core/types/primitive-types";
 
 export class Rectangle extends Shape {
@@ -12,8 +13,7 @@ export class Rectangle extends Shape {
     constructor(point: PointLike, width: number, height: number) {
         super();
 
-        this.x = point.x;
-        this.y = point.y;
+        this.set(new Point(point.x, point.y));
         this.width = width;
         this.height = height;
     }
@@ -31,9 +31,11 @@ export class Rectangle extends Shape {
         ];
     }
 
-    toBuffer() {
+    draw() {
         const fillValue = this.fill !== null ? String(this.fill).substring(0, 1) : null;
-        return new Buffer().fillRectangle(new Rectangle(Point.ZeroZero, this.width, this.height), fillValue);
+        let localBuffer = new DrawBuffer().fillRectangle(new Rectangle(Point.ZeroZero, this.width, this.height), fillValue);
+        localBuffer = Texture.applyFromOptions(localBuffer, this.texture);
+        return localBuffer;
     }
 
     get boundingBox() {

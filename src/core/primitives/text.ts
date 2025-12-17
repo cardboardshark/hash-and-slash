@@ -1,11 +1,10 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
-import { Buffer } from "@/core/pipeline/buffer";
+import { DrawBuffer } from "@/core/pipeline/draw-buffer";
+import { Point } from "@/core/primitives/point";
 import { Shape } from "@/core/primitives/shape";
 import { PointLike, TextOptions } from "@/core/types/primitive-types";
 
 export class Text extends Shape {
-    x;
-    y;
     text;
     options;
     fill = BLANK_CHARACTER;
@@ -13,13 +12,13 @@ export class Text extends Shape {
     constructor(point: PointLike, text: string | number, options?: TextOptions) {
         super();
 
-        this.x = point.x;
-        this.y = point.y;
+        this.set(new Point(point.x, point.y));
+
         this.text = text;
         this.options = options;
     }
 
-    toBuffer() {
+    draw() {
         const splitText = String(this.text).split("\n");
         const longestRow = splitText.reduce((max, line) => {
             if (line.length > max) {
@@ -48,7 +47,8 @@ export class Text extends Shape {
             }
             return composedLine;
         });
-        return Buffer.parse(output.join("\n"));
+
+        return DrawBuffer.parse(output.join("\n"));
     }
 
     get boundingBox() {
@@ -63,7 +63,7 @@ export class Text extends Shape {
         const { width, align = "left" } = this.options ?? {};
         const numCharacters = width ?? longestRow;
 
-        let xPos = this.x;
+        let xPos = this.position.x;
         if (width === undefined && align !== undefined) {
             if (align === "right") {
                 xPos -= numCharacters;
@@ -75,8 +75,8 @@ export class Text extends Shape {
         return {
             left: xPos,
             right: xPos + numCharacters,
-            top: this.y,
-            bottom: this.y + splitText.length,
+            top: this.position.y,
+            bottom: this.position.y + splitText.length,
             width: numCharacters,
             height: splitText.length,
         };

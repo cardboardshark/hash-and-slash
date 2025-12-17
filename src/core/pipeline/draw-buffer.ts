@@ -19,7 +19,7 @@ interface toStringOptions {
         height: number;
     };
 }
-export class Buffer {
+export class DrawBuffer {
     pixelMap = new Map<string, Pixel>();
     isDirty = true;
     #cachedBoundingBox: undefined | BoundingBox;
@@ -75,7 +75,7 @@ export class Buffer {
         }, "");
     }
 
-    merge(incomingBuffer: Buffer, options: MergeOptions = {}) {
+    merge(incomingBuffer: DrawBuffer, options: MergeOptions = {}) {
         incomingBuffer.pixelMap.forEach((p) => {
             if (p.value !== BLANK_CHARACTER && p.value !== null) {
                 const composedPoint = options.offset
@@ -118,6 +118,6 @@ export class Buffer {
             return acc.concat(row);
         }, []);
 
-        return new Buffer(pixels);
+        return new DrawBuffer(pixels);
     }
 }

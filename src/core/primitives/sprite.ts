@@ -1,6 +1,7 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
+import { Node2d } from "@/core/primitives/node-2d";
+import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { PointLike, RenderableEntity } from "@/core/types/primitive-types";
 import { chunk } from "lodash";
 
 interface SpriteSheetOptions {
@@ -11,16 +12,16 @@ interface SpriteSheetOptions {
     initialIndex?: number;
 }
 
-export class Sprite implements RenderableEntity {
-    position;
+export class Sprite extends Node2d {
     index;
     content;
     frameWidth: number;
     frameHeight: number;
     numFrames: number;
 
-    constructor(point: PointLike, { content, initialIndex = 0, frameWidth, frameHeight, numFrames }: SpriteSheetOptions) {
-        this.position = point;
+    constructor(point: Point, { content, initialIndex = 0, frameWidth, frameHeight, numFrames }: SpriteSheetOptions) {
+        super();
+        this.set(point);
         this.index = initialIndex;
         this.content = content;
         this.frameWidth = frameWidth;
@@ -41,7 +42,7 @@ export class Sprite implements RenderableEntity {
         this.index = value % this.numFrames;
     }
 
-    toRenderable() {
+    draw() {
         const rows = this.content.split("\n");
         const chunkedRows = chunk(rows, this.frameHeight);
         const frames = chunkedRows.reduce<string[]>((acc, rowOfRawFrames) => {
@@ -60,7 +61,9 @@ export class Sprite implements RenderableEntity {
         const currentIndex = Math.floor(this.index) % this.numFrames;
 
         const rect = new Rectangle(this.position, this.frameWidth, this.frameHeight);
+        rect.fill = BLANK_CHARACTER;
         rect.texture = { src: frames.at(currentIndex) ?? "error", fill: BLANK_CHARACTER };
-        return rect;
+
+        return rect.draw();
     }
 }

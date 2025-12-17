@@ -1,7 +1,7 @@
 import { RigidBody } from "@/core/physics/rigid-body";
 import { StaticBody } from "@/core/physics/static-body";
-import { Container } from "@/core/primitives/container";
 import { Line } from "@/core/primitives/line";
+import { Node2d } from "@/core/primitives/node-2d";
 import { PolyLine } from "@/core/primitives/poly-line";
 import { Polygon } from "@/core/primitives/polygon";
 import { Rectangle } from "@/core/primitives/rectangle";
@@ -19,7 +19,7 @@ export interface TextOptions {
     fill?: string;
 }
 
-export type Renderable = Container | Line | PolyLine | Rectangle | Polygon | Text | RenderableEntity;
+export type Renderable = Node2d | Line | PolyLine | Rectangle | Polygon | Text | RenderableEntity;
 
 export function isPointLike(shape: unknown): shape is PointLike {
     return typeof shape === "object" && shape !== null && "x" in shape && "y" in shape;

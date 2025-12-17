@@ -1,7 +1,9 @@
-import type { PointLike, ShapeLike, LineLike } from "@/core/types/primitive-types";
+import { Line } from "@/core/primitives/line";
+import { Point } from "@/core/primitives/point";
+import { Shape } from "@/core/primitives/shape";
 
 export interface CollisionResult {
-    point: PointLike;
-    shape?: ShapeLike;
-    face?: LineLike;
+    point: Point;
+    shape?: Shape;
+    face?: Line;
 }

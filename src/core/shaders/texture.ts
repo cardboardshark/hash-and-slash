@@ -1,9 +1,9 @@
-import { Buffer } from "@/core/pipeline/buffer";
+import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Text } from "@/core/primitives/text";
 import { Shader } from "@/core/shaders/shader";
-import { TextureOptions } from "@/core/types/primitive-types";
+import { TextOptions, TextureOptions } from "@/core/types/primitive-types";
 import { calculateRelativeOriginPoint } from "@/core/utils/geometry-util";
 
 export class Texture extends Shader {
@@ -18,8 +18,8 @@ export class Texture extends Shader {
         this.position = position;
     }
 
-    apply(source: Buffer) {
-        const localGrid = new Text(Point.ZeroZero, this.src).toBuffer();
+    apply(source: DrawBuffer) {
+        const localGrid = new Text(Point.ZeroZero, this.src).draw();
         const offsetPoint = calculateRelativeOriginPoint(source.boundingBox, localGrid.boundingBox, this.position);
 
         if (this.fill) {
@@ -28,5 +28,18 @@ export class Texture extends Shader {
 
         source.merge(localGrid, { offset: offsetPoint, lockTransparentPixels: true });
         return source;
+    }
+
+    static applyFromOptions(buffer: DrawBuffer, options?: Texture | TextureOptions | string) {
+        if (options instanceof Texture) {
+            options.apply(buffer);
+        }
+        if (typeof options === "object") {
+            new Texture(options).apply(buffer);
+        }
+        if (typeof options === "string") {
+            new Texture({ src: options }).apply(buffer);
+        }
+        return buffer;
     }
 }
