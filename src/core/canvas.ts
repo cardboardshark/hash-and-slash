@@ -59,7 +59,7 @@ export class Canvas {
         // }
 
         // console.log("STARTING", container);
-        screen.merge(container._draw());
+        screen.merge(container._draw(), { limit: screenRect });
         // this.#recursiveDraw(container, screen, screenRect);
 
         if (!this.element) {

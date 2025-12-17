@@ -1,4 +1,5 @@
 import { Canvas } from "@/core/canvas";
+import { DisplayKeyboardInput } from "@/core/debug";
 import { KeyboardController } from "@/core/keyboard-controller";
 import { Node2d } from "@/core/primitives/node-2d";
 
@@ -125,7 +126,7 @@ ticker.add((delta) => {
 });
 
 // debug helper
-// ticker.add(DisplayKeyboardInput(input));
+ticker.add(DisplayKeyboardInput(input));
 
 const FPSDom = document.querySelector(".fps");
 if (FPSDom) {
