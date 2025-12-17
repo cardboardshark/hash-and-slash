@@ -23,7 +23,7 @@ export function DisplayKeyboardInput(input: KeyboardController) {
                 }
 
                 if (state.timestamp) {
-                    const timePressed = new Text(new Point(canvas.width - 8, index), `${Date.now() - state.timestamp}ms`).setOrigin("100%");
+                    const timePressed = new Text(new Point(canvas.width - 1, index), `${Date.now() - state.timestamp}ms`).setOrigin("100% 0");
                     timePressed._debug = true;
                     buffer.appendChild(timePressed);
                 }

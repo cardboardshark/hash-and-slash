@@ -15,6 +15,7 @@ export class Scene extends Node2d {
 
     #bodyRegistry = new Set<PhysicsBody>();
 
+    // Wrap appendChild and removeChild to detect physics bodies
     appendChild(node: Node2d) {
         if (node instanceof RigidBody || node instanceof StaticBody) {
             this.#bodyRegistry.add(node);

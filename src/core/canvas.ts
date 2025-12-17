@@ -1,10 +1,6 @@
-import { App } from "@/core/app";
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-import { DebugRectangle } from "@/core/pipeline/debug-rectangle";
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { Shape } from "@/core/primitives/shape";
-import { Texture } from "@/core/shaders/texture";
 import { Node2d } from "@/core/primitives/node-2d";
 
 interface CanvasOptions {
@@ -27,25 +23,6 @@ export class Canvas {
         this.debugMode = options.debugMode ?? false;
     }
 
-    #renderShape(shape: Shape) {
-        const buffer = shape.draw();
-        if (shape.texture) {
-            if (shape.texture instanceof Texture) {
-                shape.texture.apply(buffer);
-            }
-            if (typeof shape.texture === "object") {
-                new Texture(shape.texture).apply(buffer);
-            }
-            if (typeof shape.texture === "string") {
-                new Texture({ src: shape.texture }).apply(buffer);
-            }
-        }
-        for (let i = 0; i < shape.shaders.length; i += 1) {
-            shape.shaders[i].apply(buffer);
-        }
-        return buffer;
-    }
-
     draw(container: Node2d) {
         const screenRect = new Rectangle(Point.ZeroZero, this.width, this.height);
         let screen = new DrawBuffer();
@@ -59,7 +36,7 @@ export class Canvas {
         // }
 
         // console.log("STARTING", container);
-        screen.merge(container._draw(), { limit: screenRect });
+        screen.merge(container.draw(), { limit: screenRect });
         // this.#recursiveDraw(container, screen, screenRect);
 
         if (!this.element) {

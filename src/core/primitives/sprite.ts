@@ -42,6 +42,11 @@ export class Sprite extends Node2d {
         this.index = value % this.numFrames;
     }
 
+    get boundingBox() {
+        const rect = new Rectangle(this.position, this.frameWidth, this.frameHeight);
+        return rect.boundingBox;
+    }
+
     draw() {
         const rows = this.content.split("\n");
         const chunkedRows = chunk(rows, this.frameHeight);
@@ -61,8 +66,7 @@ export class Sprite extends Node2d {
         const currentIndex = Math.floor(this.index) % this.numFrames;
 
         const rect = new Rectangle(this.position, this.frameWidth, this.frameHeight);
-        rect.fill = BLANK_CHARACTER;
-        rect.texture = { src: frames.at(currentIndex) ?? "error", fill: BLANK_CHARACTER };
+        rect.background = { src: frames.at(currentIndex) ?? "error" };
 
         return rect.draw();
     }

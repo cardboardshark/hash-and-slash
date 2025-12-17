@@ -1,7 +1,9 @@
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Point } from "@/core/primitives/point";
-import { BoundingBox, PhysicsBody, PointLike } from "@/core/types/primitive-types";
+import { BoundingBox, PointLike } from "@/core/types/primitive-types";
 import { mergeBoundingBoxes } from "@/core/utils/geometry-util";
+import { lerp } from "@/core/utils/math-utils";
+import { parsePositionString } from "@/core/utils/string-util";
 
 let id = -1;
 export class Node2d {
@@ -10,7 +12,9 @@ export class Node2d {
     y = 0;
     nodeId: number;
     children: Node2d[] = [];
-    body?: PhysicsBody;
+
+    // defaults to top-left of element
+    origin?: string;
 
     constructor() {
         this.nodeId = id;
@@ -21,6 +25,7 @@ export class Node2d {
     set(point: PointLike) {
         this.x = point.x;
         this.y = point.y;
+        return this;
     }
 
     get position(): Point {
@@ -34,6 +39,36 @@ export class Node2d {
     set position(point: PointLike) {
         this.x = point.x;
         this.y = point.y;
+    }
+
+    get originPosition() {
+        if (this.origin == undefined) {
+            return this.position;
+        }
+
+        const dimensions = this.boundingBox;
+        const originOffset = parsePositionString(this.origin);
+        let offsetX = 0;
+        let offsetY = 0;
+
+        // hacky
+        if (originOffset.x.is_percent) {
+            offsetX = lerp(0, (dimensions.width - 1) * -1, originOffset.x.value);
+        } else {
+            offsetX = originOffset.x.value;
+        }
+        if (originOffset.y.is_percent) {
+            offsetY = lerp(0, (dimensions.height - 1) * -1, originOffset.y.value);
+        } else {
+            offsetY = originOffset.y.value;
+        }
+
+        return this.position.add(new Point(offsetX, offsetY));
+    }
+
+    setOrigin(value?: string) {
+        this.origin = value;
+        return this;
     }
 
     appendChild(node: Node2d) {
@@ -55,17 +90,9 @@ export class Node2d {
         return mergeBoundingBoxes(this.children.map((c) => c.boundingBox));
     }
 
-    _draw() {
-        const buffer = new DrawBuffer();
-        // current scope
-        buffer.merge(this.draw(), { offset: this.position });
-
-        // continue down structure
-        this.children.forEach((c) => buffer.merge(c._draw(), { offset: this.position }));
-        return buffer;
-    }
-
     draw() {
-        return new DrawBuffer();
+        const buffer = new DrawBuffer();
+        this.children.forEach((c) => buffer.merge(c.draw(), { offset: c.originPosition }));
+        return buffer;
     }
 }

@@ -57,7 +57,7 @@ export class PipeBox extends Node2d {
         }
 
         const rect = new Rectangle(this.position, this.width, this.height);
-        rect.texture = { src: content, fill: BLANK_CHARACTER };
+        rect.background = { src: content, fill: BLANK_CHARACTER };
         return rect.draw();
     }
 }

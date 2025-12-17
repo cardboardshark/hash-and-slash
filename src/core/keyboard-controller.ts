@@ -48,7 +48,7 @@ export class KeyboardController {
     get vector() {
         const numKeysPressed = Object.entries(this.keys).filter(([, value]) => value.pressed).length;
         const { vector } =
-            DIRECTION_MAP.find((row) => {
+            Object.values(DIRECTION_MAP).find((row) => {
                 return row.keys.length === numKeysPressed && row.keys.every((key) => this.keys[key].pressed);
             }) ?? {};
 
@@ -58,7 +58,7 @@ export class KeyboardController {
     // 4 possible vectors
     get cardinalVector() {
         const { vector } =
-            DIRECTION_MAP.find((row) => {
+            Object.values(DIRECTION_MAP).find((row) => {
                 return row.keys.length === 1 && row.keys.every((key) => this.keys[key].pressed);
             }) ?? {};
 

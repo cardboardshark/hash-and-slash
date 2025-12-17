@@ -1,8 +1,13 @@
+import { DIRECTION_MAP, INPUT } from "@/core/core-constants";
 import { RigidBody } from "@/core/physics/rigid-body";
+import { Node2d } from "@/core/primitives/node-2d";
 import { Point } from "@/core/primitives/point";
+import { Rectangle } from "@/core/primitives/rectangle";
+import { Sprite } from "@/core/primitives/sprite";
 import { Text } from "@/core/primitives/text";
 import type { PhysicsBody, PointLike } from "@/core/types/primitive-types";
 import type { TickerDelta } from "@/core/types/ticker-types";
+import { AssetUtil } from "@/core/utils/asset-util";
 import { calculateBoundingBoxFromPoints } from "@/core/utils/geometry-util";
 import { Trail } from "@/games/snake/trail";
 interface PlayerOptions {
@@ -25,7 +30,6 @@ export class Player extends RigidBody {
         super();
         // this.trail = new Trail(() => this.point.round(), Player.InitialMaxTrailLength);
         // this.trail.add(initialPosition);
-
         this.set(initialPosition);
     }
 
@@ -61,17 +65,33 @@ export class Player extends RigidBody {
     }
 
     get boundingBox() {
-        return calculateBoundingBoxFromPoints([this.position]);
+        return this.sprite.boundingBox;
+    }
+
+    get sprite() {
+        return new Sprite(this.position, { content: AssetUtil.load("snake/rocket"), frameWidth: 3, frameHeight: 3, numFrames: 4 });
     }
 
     draw() {
-        // const container = new Node2d();
+        const container = new Node2d();
 
-        // const trail = this.trail.line;
-        // trail.fill = "-";
+        const sprite = this.sprite;
+        if (this.constantForce?.equals(DIRECTION_MAP.left.vector)) {
+            this.origin = "0 50%";
+            sprite.setFrame(3);
+        } else if (this.constantForce?.equals(DIRECTION_MAP.right.vector)) {
+            sprite.setFrame(1);
+            this.origin = "100% 50%";
+        } else if (this.constantForce?.equals(DIRECTION_MAP.down.vector)) {
+            sprite.setFrame(2);
+            this.origin = "50% 100%";
+        } else if (this.constantForce?.equals(DIRECTION_MAP.up.vector)) {
+            this.origin = "50% 0";
+            sprite.setFrame(0);
+        }
 
-        // container.add(trail);
-        // container.appendChild();
-        return new Text(this.position, this.fill).draw();
+        container.appendChild(sprite);
+
+        return container.draw();
     }
 }

@@ -55,7 +55,7 @@ const apple = new Apple({ x: 5, y: 5 });
  * HUD
  */
 const scoreBox = new Rectangle(Point.ZeroZero, canvas.width, 5);
-scoreBox.fill = "█";
+scoreBox.background = { fill: "█" };
 
 const scoreText = new Text(new Point(scoreBox.position).add({ x: 1, y: 1 }), `\nMy score is: ${apple.numCollected}\n`, {
     width: canvas.width - 2,
