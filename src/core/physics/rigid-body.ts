@@ -1,9 +1,8 @@
-import { Node2d } from "@/core/primitives/node-2d";
+import { PhysicsBody } from "@/core/physics/physic-body";
 import { Point } from "@/core/primitives/point";
-import { BoundingBox, PhysicsBody } from "@/core/types/primitive-types";
 
 let previousId = -1;
-export class RigidBody extends Node2d {
+export class RigidBody extends PhysicsBody {
     rid: number;
     vector = new Point(Point.ZeroZero);
     constantForce?: Point;
@@ -11,7 +10,6 @@ export class RigidBody extends Node2d {
     // constantTorque?: number;
     linearDamp?: number;
     contacts = new Set<PhysicsBody>();
-    boundingBoxRef?: BoundingBox;
 
     constructor() {
         super();
@@ -26,20 +24,5 @@ export class RigidBody extends Node2d {
     //     this.constantTorque = value;
     // }
 
-    setBoundingBox(box: BoundingBox) {
-        this.boundingBoxRef = box;
-    }
-
-    get boundingBox() {
-        if (this.boundingBoxRef === undefined) {
-            throw new Error("RigidBody does not have defined BoundingBox");
-        }
-        return this.boundingBoxRef;
-    }
-
     applyImpulse(impulse: Point, position: Point) {}
-
-    bodyEntered(other: PhysicsBody) {}
-
-    bodyExited(other: PhysicsBody) {}
 }

@@ -12,6 +12,7 @@ export class PolyLine {
     points: Point[];
     closed: false = false;
     fill = "l";
+    visible = true;
 
     constructor(points: PointLike[]) {
         this.points = points.map((p) => new Point(p));

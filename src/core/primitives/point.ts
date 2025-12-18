@@ -1,25 +1,22 @@
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-import { PointLike } from "@/core/types/primitive-types";
+import { PointLike, PointLikeFn } from "@/core/types/primitive-types";
 import { inRange } from "lodash";
 
 export class Point {
-    x: number;
-    y: number;
+    x = 0;
+    y = 0;
 
     static ZeroZero = { x: 0, y: 0 } as const;
 
     constructor(x: number, y: number);
     constructor(point: PointLike);
-    constructor(pointOrX: number | PointLike, y?: number) {
-        if (typeof pointOrX === "object" && pointOrX !== null) {
-            this.x = pointOrX.x;
-            this.y = pointOrX.y;
+    constructor(firstArg: number | PointLike, y?: number) {
+        if (typeof firstArg === "object" && firstArg !== null) {
+            this.x = firstArg.x;
+            this.y = firstArg.y;
         } else if (y !== undefined) {
-            this.x = pointOrX;
+            this.x = firstArg;
             this.y = y;
-        } else {
-            this.x = 0;
-            this.y = 0;
         }
     }
 
@@ -91,6 +88,20 @@ export class Point {
         const outY = this.y - 2 * dotProduct * normal.y;
 
         return new Point(outX, outY);
+    }
+
+    // v. hacky
+    rotate(degrees: 90 | 180 | 270) {
+        if (degrees === 90) {
+            return new Point(this.y * -1, this.x);
+        }
+        if (degrees === 180) {
+            return new Point(this.x * -1, this.y * -1);
+        }
+        if (degrees === 270) {
+            return new Point(this.y, this.x * -1);
+        }
+        return this.clone();
     }
 
     multiply(point: PointLike) {

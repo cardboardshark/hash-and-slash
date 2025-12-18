@@ -1,6 +1,8 @@
 import { Canvas } from "@/core/canvas";
 import { DisplayKeyboardInput } from "@/core/debug";
 import { KeyboardController } from "@/core/keyboard-controller";
+import { DrawBuffer } from "@/core/pipeline/draw-buffer";
+import { Line } from "@/core/primitives/line";
 import { Node2d } from "@/core/primitives/node-2d";
 
 import { Point } from "@/core/primitives/point";
@@ -35,7 +37,7 @@ canvas.debugMode = true;
 /**
  * Entities
  */
-const player = new Player({ initialPosition: new Point(5, 5) });
+const player = new Player({ initialPosition: new Point(3, 3) });
 
 // scene.appendChild(new Wall(new Rectangle(new Point(8, 8), 10, 10)));
 scene.appendChild(new Wall(new Rectangle(new Point(0, 0), canvas.width, 1)));
@@ -43,13 +45,8 @@ scene.appendChild(new Wall(new Rectangle(new Point(0, 0), 1, canvas.height - 6))
 scene.appendChild(new Wall(new Rectangle(new Point(canvas.width - 1, 0), 1, canvas.height - 6)));
 scene.appendChild(new Wall(new Rectangle(new Point(0, canvas.height - 6), canvas.width, 1)));
 
-scene.appendChild(player);
-// App.scene.add(wall);
-// App.scene.add(topWall);
-// App.scene.add(leftWall);
-// App.scene.add(bottomWall);
-
 const apple = new Apple({ x: 5, y: 5 });
+scene.appendChild(apple);
 
 /**
  * HUD
@@ -69,23 +66,33 @@ scoreContainer.set({ x: 0, y: canvas.height - 5 });
 
 scene.appendChild(scoreContainer);
 
+const background = new Sprite(new Point(canvas.width - 2, canvas.height - 6), AssetUtil.load("/snake/tree"));
+background.origin = "100% 100%";
+scene.appendChild(background);
+
+// scene.appendChild(new Line(new Point(5, 5), new Point(10, 5)));
+
+scene.appendChild(player);
+
 /**
  * Death Screen
  */
 const skull = new Sprite(new Point(2, 3), {
     content: AssetUtil.load("snake/skull"),
-    frameWidth: 10,
-    frameHeight: 6,
+    width: 10,
+    height: 6,
     numFrames: 10,
 });
 skull.id = "sprite";
 
 const skullBox = new PipeBox(new Point(0, 0), 12, 9);
+skullBox.fill = " ";
 skullBox.id = "skullbox";
 
 const skullContainer = new Node2d().setChildren([skullBox, new Text(new Point(2, 1), "u = dead"), skull]);
 skullContainer.set(new Point(9, 8));
 skullContainer.id = "skucontainer";
+skullContainer.visible = false;
 scene.appendChild(skullContainer);
 
 /**
@@ -98,28 +105,20 @@ ticker.add((delta) => {
     }
 
     scene.process(delta);
-    // player.move(delta, App.input.cardinalVector, apple.numCollected);
-    // }
 
     // if (apple.canPlayerClaimApple(player)) {
     //     apple.claimApple();
     //     apple.generateApple(liveArea.rectangle, new PolyLine([]));
     // }
 
-    scoreText.text = `\nMy score is: ${apple.numCollected}\n`;
+    scoreText.text = `\nMy score is: ${player.score}\n`;
 
-    // buffer.appendChild(player);
-    // buffer.appendChild(wall);
-    // buffer.appendChild(topWall);
-    // buffer.appendChild(leftWall);
-    // buffer.appendChild(rightWall);
-    // buffer.appendChild(bottomWall);
     // buffer.appendChild(apple);
 
-    skull.next(10 * delta.deltaTime);
     // if (player.isAlive === false) {
-    // skull.next(10 * delta.deltaTime);
-    //     buffer.add(skullContainer);
+    //     skull.next(10 * delta.deltaTime);
+    //     skullContainer.visible = true;
+    //     // ticker.paused = true;
     // }
 
     canvas.draw(scene);

@@ -1,14 +1,13 @@
-import { RigidBody } from "@/core/physics/rigid-body";
-import { StaticBody } from "@/core/physics/static-body";
 import { Line } from "@/core/primitives/line";
 import { Node2d } from "@/core/primitives/node-2d";
 import { PolyLine } from "@/core/primitives/poly-line";
 import { Polygon } from "@/core/primitives/polygon";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Text } from "@/core/primitives/text";
+import { Pixel } from "@/core/types/canvas-types";
 
-export type PhysicsBody = StaticBody | RigidBody;
 export type PointLike = { x: number; y: number };
+export type PointLikeFn = () => { x: number; y: number };
 
 export interface TextOptions {
     align?: "left" | "center" | "right";
@@ -36,4 +35,17 @@ export interface BackgroundOptions {
     src?: string | number;
     position?: string;
     fill?: number | string | null;
+}
+
+export interface IntersectingPixels {
+    source: Pixel;
+    offset: Pixel;
+}
+
+export interface SpriteSheetOptions {
+    content: string;
+    numFrames: number;
+    width: number;
+    height: number;
+    initialIndex?: number;
 }

@@ -1,7 +1,7 @@
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Point } from "@/core/primitives/point";
+import { Background } from "@/core/shaders/background";
 import { Shader } from "@/core/shaders/shader";
-import { Texture } from "@/core/shaders/texture";
 import { Pixel } from "@/core/types/canvas-types";
 import { PointLike, BackgroundOptions } from "@/core/types/primitive-types";
 import { calculateBoundingBoxFromPoints, calculateRadianBetweenPoints, convertRadianToVector } from "@/core/utils/geometry-util";
@@ -10,17 +10,14 @@ import { calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
 export class Line {
     start;
     end;
-    fill = "l";
-    texture?: string | BackgroundOptions | Texture;
+    stroke = "l";
+    background?: string | number | Background | BackgroundOptions;
     shaders: Shader[] = [];
+    visible = true;
 
     constructor(p0: PointLike, p1: PointLike) {
         this.start = new Point(p0);
         this.end = new Point(p1);
-    }
-
-    get point() {
-        return this.start;
     }
 
     get length() {
@@ -83,7 +80,7 @@ export class Line {
             pixels.push({
                 x,
                 y,
-                value: String(this.fill).substring(0, 1),
+                value: String(this.stroke).substring(0, 1),
             });
         }
         return new DrawBuffer(pixels);

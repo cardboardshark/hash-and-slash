@@ -25,6 +25,9 @@ export const INPUT = {
     META: "meta",
 } as const;
 
+export const CARDINAL_DIRECTION = [INPUT.UP, INPUT.RIGHT, INPUT.DOWN, INPUT.LEFT] as const;
+export type CardinalDirection = "up" | "right" | "down" | "left";
+
 export interface DirectionLookupMap {
     keys: InputDirection[];
     radian: number;

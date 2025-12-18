@@ -6,6 +6,7 @@ import { BackgroundOptions } from "@/core/types/primitive-types";
 export abstract class Shape extends Node2d {
     background?: string | number | Background | BackgroundOptions;
     shaders: Shader[] = [];
+    rotate?: number;
 
     collision?: {
         type: "static" | "rigid";

@@ -1,14 +1,18 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Pixel } from "@/core/types/canvas-types";
-import { BoundingBox, PointLike } from "@/core/types/primitive-types";
-import { calculateBoundingBoxFromPoints, isPointInsideRectangle } from "@/core/utils/geometry-util";
+import { BoundingBox, IntersectingPixels, PointLike } from "@/core/types/primitive-types";
+import { calculateBoundingBoxFromPoints, isPointInsideRectangle, rotateMatrix } from "@/core/utils/geometry-util";
 import { sortBy } from "lodash";
 
 interface MergeOptions {
-    offset?: PointLike;
+    offset?: { x: number; y: number };
     lockTransparentPixels?: boolean;
     limit?: Rectangle;
+}
+interface IntersectArgument {
+    buffer: DrawBuffer;
+    offset: { x: number; y: number };
 }
 
 interface toStringOptions {
@@ -21,14 +25,14 @@ interface toStringOptions {
 }
 export class DrawBuffer {
     pixelMap = new Map<string, Pixel>();
-    isDirty = true;
+    hasChanged = true;
     #cachedBoundingBox: undefined | BoundingBox;
 
     constructor(initialPixels: Pixel[] = []) {
         initialPixels.forEach((p) => this.pixelMap.set(this.#flatKey(p), p));
     }
 
-    #flatKey(point: PointLike) {
+    #flatKey(point: { x: number; y: number }) {
         return `${point.x},${point.y}`;
     }
 
@@ -94,15 +98,61 @@ export class DrawBuffer {
                 }
             }
         });
-        this.isDirty = true;
+        this.hasChanged = true;
         return this;
     }
 
     get boundingBox() {
-        if (this.isDirty || this.#cachedBoundingBox === undefined) {
+        if (this.hasChanged || this.#cachedBoundingBox === undefined) {
             this.#cachedBoundingBox = calculateBoundingBoxFromPoints(Array.from(this.pixelMap.values()));
         }
         return this.#cachedBoundingBox;
+    }
+
+    rotate(degree: number) {
+        const pixels = rotateMatrix(Array.from(this.pixelMap.values()), degree);
+        return new DrawBuffer(pixels);
+    }
+
+    /** Return an array of overlapping pixels for both objects. */
+    static intersect(bufferA: IntersectArgument, bufferB: IntersectArgument) {
+        const bufferAPoints = Array.from(bufferA.buffer.pixelMap.values()).reduce<Record<string, IntersectingPixels>>((acc, p) => {
+            const offsetPoint = bufferA.offset
+                ? {
+                      x: Math.round(p.x + bufferA.offset.x),
+                      y: Math.round(p.y + bufferA.offset.y),
+                      value: p.value,
+                  }
+                : p;
+
+            acc[bufferA.buffer.#flatKey(offsetPoint)] = {
+                source: p,
+                offset: offsetPoint,
+            };
+            return acc;
+        }, {});
+        const bufferBPoints = Array.from(bufferB.buffer.pixelMap.values()).reduce<Record<string, IntersectingPixels>>((acc, p) => {
+            const offsetPoint = bufferB.offset
+                ? {
+                      x: Math.round(p.x + bufferB.offset.x),
+                      y: Math.round(p.y + bufferB.offset.y),
+                      value: p.value,
+                  }
+                : p;
+
+            acc[bufferB.buffer.#flatKey(offsetPoint)] = {
+                source: p,
+                offset: offsetPoint,
+            };
+            return acc;
+        }, {});
+
+        return Object.entries(bufferAPoints).reduce<IntersectingPixels[]>((acc, [key, intersection]) => {
+            if (bufferBPoints[key] !== undefined && bufferBPoints[key].source.value !== null && bufferBPoints[key].source.value !== BLANK_CHARACTER) {
+                acc.push(intersection);
+            }
+            return acc;
+        }, []);
     }
 
     static parse(input: string) {

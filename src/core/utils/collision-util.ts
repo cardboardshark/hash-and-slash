@@ -1,7 +1,8 @@
+import { PhysicsBody } from "@/core/physics/physic-body";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { BoundingBox, PhysicsBody } from "@/core/types/primitive-types";
+import { BoundingBox } from "@/core/types/primitive-types";
 
 /**
  * Determine if two Axis-aligned bounding box elements have overlapping pixels.
@@ -22,18 +23,18 @@ import { BoundingBox, PhysicsBody } from "@/core/types/primitive-types";
 //     return aRect.x < bRect.x + bRect.width && aRect.x + aRect.width > bRect.x && aRect.y < bRect.y + bRect.height && aRect.y + aRect.height > bRect.y;
 // }
 
-export function doBodiesOverlap(bodyA: PhysicsBody, bodyB: PhysicsBody) {
+export function doBodiesOverlap(bodyA: PhysicsBody, bodyB: PhysicsBody, collisonHullThickness = 0) {
     const aRect = {
-        x: bodyA.boundingBox.left,
-        y: bodyA.boundingBox.top,
-        width: bodyA.boundingBox.width,
-        height: bodyA.boundingBox.height,
+        x: bodyA.boundingBox.left - collisonHullThickness,
+        y: bodyA.boundingBox.top - collisonHullThickness,
+        width: bodyA.boundingBox.width + collisonHullThickness * 2,
+        height: bodyA.boundingBox.height + collisonHullThickness * 2,
     };
     const bRect = {
-        x: bodyB.boundingBox.left,
-        y: bodyB.boundingBox.top,
-        width: bodyB.boundingBox.width,
-        height: bodyB.boundingBox.height,
+        x: bodyB.boundingBox.left - collisonHullThickness,
+        y: bodyB.boundingBox.top - collisonHullThickness,
+        width: bodyB.boundingBox.width + collisonHullThickness * 2,
+        height: bodyB.boundingBox.height + collisonHullThickness * 2,
     };
     return aRect.x < bRect.x + bRect.width && aRect.x + aRect.width > bRect.x && aRect.y < bRect.y + bRect.height && aRect.y + aRect.height > bRect.y;
 }

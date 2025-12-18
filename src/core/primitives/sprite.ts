@@ -1,32 +1,59 @@
-import { BLANK_CHARACTER } from "@/core/core-constants";
 import { Node2d } from "@/core/primitives/node-2d";
-import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
+import { PointLike, PointLikeFn, SpriteSheetOptions } from "@/core/types/primitive-types";
 import { chunk } from "lodash";
 
-interface SpriteSheetOptions {
-    content: string;
-    numFrames: number;
-    frameWidth: number;
-    frameHeight: number;
-    initialIndex?: number;
-}
-
 export class Sprite extends Node2d {
-    index;
-    content;
-    frameWidth: number;
-    frameHeight: number;
-    numFrames: number;
+    index = 0;
+    width = 0;
+    height = 0;
+    numFrames = 0;
+    frames: string[] = [];
+    rect;
+    rotate?: number;
 
-    constructor(point: Point, { content, initialIndex = 0, frameWidth, frameHeight, numFrames }: SpriteSheetOptions) {
+    constructor(point: PointLike | PointLikeFn, options: string | SpriteSheetOptions) {
         super();
+        if (typeof options === "object") {
+            const { content, initialIndex = 0, width, height, numFrames } = options ?? {};
+            this.index = initialIndex;
+            this.width = width;
+            this.height = height;
+            this.numFrames = numFrames;
+            this.frames = this.#makeFrames(content);
+        } else {
+            const rows = options.split("\n");
+            const longestRow = rows.reduce((max, line) => {
+                if (line.length > max) {
+                    max = line.length;
+                }
+                return max;
+            }, 0);
+
+            this.width = longestRow;
+            this.height = rows.length;
+            this.frames = this.#makeFrames(options);
+        }
+
         this.set(point);
-        this.index = initialIndex;
-        this.content = content;
-        this.frameWidth = frameWidth;
-        this.frameHeight = frameHeight;
-        this.numFrames = numFrames;
+        this.rect = new Rectangle(point, this.width, this.height);
+    }
+
+    #makeFrames(content: string) {
+        const rows = content.split("\n");
+        const chunkedRows = chunk(rows, this.height);
+        return chunkedRows.reduce<string[]>((acc, rowOfRawFrames) => {
+            const rowFrames = rowOfRawFrames.reduce<string[]>((frameAcc, line) => {
+                const chunkedLines = chunk(Array.from(line), this.width + 1);
+                chunkedLines.forEach((line, index) => {
+                    frameAcc[index] ??= "";
+                    frameAcc[index] += `${line.join("")}\n`;
+                });
+                return frameAcc;
+            }, []);
+            acc.push(...rowFrames);
+            return acc;
+        }, []);
     }
 
     previous(increment = 1) {
@@ -43,31 +70,13 @@ export class Sprite extends Node2d {
     }
 
     get boundingBox() {
-        const rect = new Rectangle(this.position, this.frameWidth, this.frameHeight);
-        return rect.boundingBox;
+        return this.rect.boundingBox;
     }
 
     draw() {
-        const rows = this.content.split("\n");
-        const chunkedRows = chunk(rows, this.frameHeight);
-        const frames = chunkedRows.reduce<string[]>((acc, rowOfRawFrames) => {
-            const rowFrames = rowOfRawFrames.reduce<string[]>((frameAcc, line) => {
-                const chunkedLines = chunk(Array.from(line), this.frameWidth + 1);
-                chunkedLines.forEach((line, index) => {
-                    frameAcc[index] ??= "";
-                    frameAcc[index] += `${line.join("")}\n`;
-                });
-                return frameAcc;
-            }, []);
-            acc.push(...rowFrames);
-            return acc;
-        }, []);
-
         const currentIndex = Math.floor(this.index) % this.numFrames;
-
-        const rect = new Rectangle(this.position, this.frameWidth, this.frameHeight);
-        rect.background = { src: frames.at(currentIndex) ?? "error" };
-
-        return rect.draw();
+        this.rect.background = { src: this.frames.at(currentIndex) ?? "error" };
+        this.rect.rotate = this.rotate;
+        return this.rect.draw();
     }
 }

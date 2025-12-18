@@ -1,17 +1,23 @@
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
+import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
-import { BoundingBox, PointLike } from "@/core/types/primitive-types";
+import { PolyLine } from "@/core/primitives/poly-line";
+import { Polygon } from "@/core/primitives/polygon";
+import { BoundingBox, PointLike, PointLikeFn } from "@/core/types/primitive-types";
 import { mergeBoundingBoxes } from "@/core/utils/geometry-util";
 import { lerp } from "@/core/utils/math-utils";
 import { parsePositionString } from "@/core/utils/string-util";
 
+type ValidChildren = Node2d | Line | PolyLine;
 let id = -1;
 export class Node2d {
     id: string;
     x = 0;
     y = 0;
+    pointReferenceFn?: () => { x: number; y: number };
     nodeId: number;
-    children: Node2d[] = [];
+    children = new Set<ValidChildren>();
+    visible = true;
 
     // defaults to top-left of element
     origin?: string;
@@ -22,23 +28,38 @@ export class Node2d {
         id += 1;
     }
 
-    set(point: PointLike) {
-        this.x = point.x;
-        this.y = point.y;
+    set(pointOrPointFn: PointLike | PointLikeFn) {
+        if (typeof pointOrPointFn === "function") {
+            this.pointReferenceFn = pointOrPointFn;
+        } else {
+            this.x = pointOrPointFn.x;
+            this.y = pointOrPointFn.y;
+        }
+
         return this;
     }
 
     get position(): Point {
+        if (this.pointReferenceFn) {
+            return new Point(this.pointReferenceFn());
+        }
         return new Point(Math.floor(this.x), Math.floor(this.y));
     }
 
     get precisePosition() {
+        if (this.pointReferenceFn) {
+            return new Point(this.pointReferenceFn());
+        }
         return new Point(this.x, this.y);
     }
 
-    set position(point: PointLike) {
-        this.x = point.x;
-        this.y = point.y;
+    set position(pointlike: PointLike) {
+        if (typeof pointlike === "function") {
+            this.pointReferenceFn = pointlike;
+        } else {
+            this.x = pointlike.x;
+            this.y = pointlike.y;
+        }
     }
 
     get originPosition() {
@@ -71,28 +92,47 @@ export class Node2d {
         return this;
     }
 
-    appendChild(node: Node2d) {
-        if (this.children.includes(node) === false) {
-            this.children.push(node);
+    appendChild(node: ValidChildren) {
+        if (this.children.has(node) === false) {
+            this.children.add(node);
         }
         return this;
     }
-    removeChild(node: Node2d) {
-        this.children = this.children.filter((n) => n !== node);
+    removeChild(node: ValidChildren) {
+        this.children.delete(node);
         return this;
     }
-    setChildren(nodeList: Node2d[]) {
-        this.children = nodeList;
+    setChildren(nodeList: ValidChildren[]) {
+        this.children = new Set<ValidChildren>(nodeList);
         return this;
     }
 
     get boundingBox(): BoundingBox {
-        return mergeBoundingBoxes(this.children.map((c) => c.boundingBox));
+        return mergeBoundingBoxes(Array.from(this.children.values()).map((c) => c.boundingBox));
     }
+
+    // get collider(): Polygon {
+    //     const dimensions = this.boundingBox;
+    //     return new Polygon([
+    //         new Point(dimensions.left, dimensions.top),
+    //         new Point(dimensions.right, dimensions.top),
+    //         new Point(dimensions.right, dimensions.bottom),
+    //         new Point(dimensions.left, dimensions.bottom),
+    //         new Point(dimensions.left, dimensions.top),
+    //     ]);
+    // }
 
     draw() {
         const buffer = new DrawBuffer();
-        this.children.forEach((c) => buffer.merge(c.draw(), { offset: c.originPosition }));
+        Array.from(this.children.values())
+            .filter((c) => c.visible)
+            .forEach((c) => {
+                if (c instanceof Node2d) {
+                    return buffer.merge(c.draw(), { offset: c.originPosition });
+                }
+                // lines or polylines
+                return buffer.merge(c.draw());
+            });
         return buffer;
     }
 }

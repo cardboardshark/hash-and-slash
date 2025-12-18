@@ -2,6 +2,7 @@ import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { BoundingBox, PointLike } from "@/core/types/primitive-types";
 import { parsePositionString } from "@/core/utils/string-util";
+import { isEqual, range } from "lodash";
 
 export function convertRadianToVector(radian: number): PointLike {
     return { x: Math.cos(radian), y: -Math.sin(radian) };
@@ -131,4 +132,25 @@ export function calculateBoundingBoxFromPoints(points: PointLike[]): BoundingBox
         width: dimensions.right - dimensions.left,
         height: dimensions.bottom - dimensions.top,
     };
+}
+
+export function rotateMatrix<T extends PointLike>(points: T[], angle: number, precision = 2) {
+    // Convert angle from degrees to radians
+    const radians = angle * (Math.PI / 180);
+
+    // Rotation matrix components
+    const cosAngle = Math.cos(radians);
+    const sinAngle = Math.sin(radians);
+
+    // Apply rotation to each point in the matrix
+    return [...points].map((point) => {
+        let xNew = point.x * cosAngle - point.y * sinAngle;
+        let yNew = point.x * sinAngle + point.y * cosAngle;
+
+        // Round the new coordinates to the specified precision (default to 2 decimal places)
+        point.x = parseFloat(xNew.toFixed(precision));
+        point.y = parseFloat(yNew.toFixed(precision));
+
+        return point;
+    });
 }

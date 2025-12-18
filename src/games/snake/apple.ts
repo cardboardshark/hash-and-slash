@@ -1,17 +1,21 @@
+import { StaticBody } from "@/core/physics/static-body";
 import { Point } from "@/core/primitives/point";
 import type { PolyLine } from "@/core/primitives/poly-line";
 import { Rectangle } from "@/core/primitives/rectangle";
-import { Text } from "@/core/primitives/text";
-import type { RenderableEntity, PointLike } from "@/core/types/primitive-types";
+import { Sprite } from "@/core/primitives/sprite";
+import type { BoundingBox, PointLike } from "@/core/types/primitive-types";
+import { AssetUtil } from "@/core/utils/asset-util";
 import type { Player } from "@/games/snake/player";
 import { random } from "lodash";
 
-export class Apple implements RenderableEntity {
+export class Apple extends StaticBody {
     numCollected: number = 0;
-    position;
+    sprite;
 
-    constructor(initialPosition: PointLike) {
-        this.position = new Point(initialPosition);
+    constructor(point: PointLike) {
+        super();
+        this.set(point);
+        this.sprite = new Sprite(() => this.position, AssetUtil.load("/snake/apple"));
     }
 
     canPlayerClaimApple(player: Player) {
@@ -36,7 +40,11 @@ export class Apple implements RenderableEntity {
         console.log("Moving apple to", this.position);
     }
 
-    toRenderable() {
-        return new Text(this.position, "ó");
+    get boundingBox() {
+        return this.sprite.boundingBox;
+    }
+
+    draw() {
+        return this.sprite.draw();
     }
 }

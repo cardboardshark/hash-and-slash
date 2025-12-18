@@ -3,6 +3,7 @@ import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Point } from "@/core/primitives/point";
 import { Shape } from "@/core/primitives/shape";
 import { PointLike, TextOptions } from "@/core/types/primitive-types";
+import { calculateBoundingBoxFromPoints } from "@/core/utils/geometry-util";
 
 export class Text extends Shape {
     text;
@@ -80,5 +81,18 @@ export class Text extends Shape {
             width: numCharacters,
             height: splitText.length,
         };
+    }
+
+    static fromPoints(point: PointLike, points: PointLike[], value: string | number = "X") {
+        const dimensions = calculateBoundingBoxFromPoints(points);
+        let content = "";
+        for (let y = dimensions.top; y < dimensions.bottom; y += 1) {
+            let characters = Array.from({ length: dimensions.width });
+            for (let x = dimensions.left; x < dimensions.right; x += 1) {
+                characters.splice(x, 1, value);
+            }
+            content += `${characters.join("")}\n`;
+        }
+        return new Text(point, content);
     }
 }

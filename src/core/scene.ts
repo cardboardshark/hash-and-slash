@@ -1,28 +1,33 @@
+import { PhysicsBody } from "@/core/physics/physic-body";
 import { RigidBody } from "@/core/physics/rigid-body";
 import { StaticBody } from "@/core/physics/static-body";
+import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Line } from "@/core/primitives/line";
 import { Node2d } from "@/core/primitives/node-2d";
-import { Point } from "@/core/primitives/point";
-import { Rectangle } from "@/core/primitives/rectangle";
-import { RayCaster } from "@/core/ray-caster";
-import { PhysicsBody } from "@/core/types/primitive-types";
+import { PolyLine } from "@/core/primitives/poly-line";
+import { IntersectingPixels } from "@/core/types/primitive-types";
 import { TickerDelta } from "@/core/types/ticker-types";
 import { doBodiesOverlap } from "@/core/utils/collision-util";
 
-const COLLISION_HULL_THICKNESS = 0.5;
+type ValidChildren = Node2d | Line | PolyLine;
+const COLLISION_HULL_THICKNESS = 1;
+interface BodyIntersection {
+    other: PhysicsBody;
+    intersections: IntersectingPixels[];
+}
 export class Scene extends Node2d {
     id = "scene";
 
     #bodyRegistry = new Set<PhysicsBody>();
 
     // Wrap appendChild and removeChild to detect physics bodies
-    appendChild(node: Node2d) {
+    appendChild(node: ValidChildren) {
         if (node instanceof RigidBody || node instanceof StaticBody) {
             this.#bodyRegistry.add(node);
         }
         return super.appendChild(node);
     }
-    removeChild(node: Node2d) {
+    removeChild(node: ValidChildren) {
         if (node instanceof RigidBody || node instanceof StaticBody) {
             this.#bodyRegistry.delete(node);
         }
@@ -31,23 +36,67 @@ export class Scene extends Node2d {
 
     process(delta: TickerDelta) {
         const allBodies = Array.from(this.#bodyRegistry);
-        const rigidBodies = allBodies.filter((body) => body instanceof RigidBody);
 
-        rigidBodies.forEach((body) => {
+        allBodies.forEach((body) => {
             let initialPosition = body.position.clone();
             let currentPosition = body.position.clone();
 
-            if (body.constantForce) {
-                const constantForceVector = body.constantForce.multiplyScalar(body.inertia * delta.deltaMS);
-                currentPosition = body.precisePosition.add(constantForceVector);
+            if (body instanceof RigidBody) {
+                if (body.constantForce) {
+                    const constantForceVector = body.constantForce.multiplyScalar(body.inertia * delta.deltaMS);
+                    currentPosition = body.precisePosition.add(constantForceVector);
+                }
             }
-            // console.log(initialPosition, currentPosition);
+
             if (initialPosition.equals(currentPosition) === false) {
                 body.position = currentPosition;
 
                 // fast loose check
-                const bodiesWithBoundingBoxContact = allBodies.filter((other) => other !== body && doBodiesOverlap(body, other));
+                const nearbyBodies = allBodies.filter((other) => other !== body && doBodiesOverlap(body, other, COLLISION_HULL_THICKNESS));
 
+                const intersectingBodies = nearbyBodies.reduce<BodyIntersection[]>((acc, other) => {
+                    // laughably ineffecient
+                    const intersections = DrawBuffer.intersect(
+                        { buffer: body.draw(), offset: body.originPosition },
+                        { buffer: other.draw(), offset: other.originPosition }
+                    );
+
+                    if (intersections.length > 0) {
+                        acc.push({ other, intersections });
+                    }
+
+                    return acc;
+                }, []);
+
+                intersectingBodies.forEach(({ other, intersections }) => {
+                    if (body.contacts.has(other) === false) {
+                        body.contacts.add(other);
+                        body.bodyEntered(other, intersections);
+                    }
+
+                    body.bodyContact(intersections);
+                });
+
+                // Find persistent contacts
+                const initialContacts = Array.from(body.contacts).filter((o) => {
+                    return intersectingBodies.find((row) => row.other === o) === undefined;
+                });
+                initialContacts.forEach((other) => {
+                    // laughably ineffecient
+                    const intersections = DrawBuffer.intersect(
+                        { buffer: body.draw(), offset: body.originPosition },
+                        { buffer: other.draw(), offset: other.originPosition }
+                    );
+
+                    if (intersections.length > 0) {
+                        body.bodyContact(intersections);
+                    } else {
+                        body.contacts.delete(other);
+                        body.bodyExited(other);
+                    }
+                });
+
+                /*
                 // more detailed check
                 const raysWithBodyContact = new Map<PhysicsBody, RayCaster>();
 
@@ -106,7 +155,7 @@ export class Scene extends Node2d {
                             body.bodyExited(other);
                         }
                     });
-                }
+                }*/
             }
         });
     }

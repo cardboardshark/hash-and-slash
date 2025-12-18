@@ -11,7 +11,6 @@ import { calculateBoundingBoxFromPoints } from "@/core/utils/geometry-util";
 export class Polygon extends Shape {
     points: PointLike[];
     closed: true = true;
-    boundingBox: BoundingBox;
     fill = "p";
 
     constructor(points: PointLike[]) {
@@ -20,8 +19,6 @@ export class Polygon extends Shape {
         this.points = points;
 
         this.set({ x: this.points[0].x, y: this.points[0].y });
-
-        this.boundingBox = Polygon.calculateBoundingBox(this);
     }
 
     get lines() {
@@ -95,8 +92,8 @@ export class Polygon extends Shape {
         return new DrawBuffer(pixels);
     }
 
-    static calculateBoundingBox(polygon: Polygon): BoundingBox {
-        return calculateBoundingBoxFromPoints(polygon.points);
+    get boundingBox(): BoundingBox {
+        return calculateBoundingBoxFromPoints(this.points);
     }
 }
 

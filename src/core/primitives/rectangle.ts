@@ -3,16 +3,16 @@ import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { Shape } from "@/core/primitives/shape";
 import { Background } from "@/core/shaders/background";
-import { PointLike } from "@/core/types/primitive-types";
+import { PointLike, PointLikeFn } from "@/core/types/primitive-types";
 
 export class Rectangle extends Shape {
     width;
     height;
 
-    constructor(point: PointLike, width: number, height: number) {
+    constructor(point: PointLike | PointLikeFn, width: number, height: number) {
         super();
 
-        this.set(new Point(point.x, point.y));
+        this.set(point);
         this.width = width;
         this.height = height;
     }
@@ -33,6 +33,9 @@ export class Rectangle extends Shape {
     draw() {
         let localBuffer = new DrawBuffer().fillRectangle(new Rectangle(Point.ZeroZero, this.width, this.height));
         localBuffer = Background.apply(localBuffer, this.background);
+        if (this.rotate) {
+            localBuffer.rotate(this.rotate);
+        }
         return localBuffer;
     }
 
