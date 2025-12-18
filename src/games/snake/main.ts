@@ -1,8 +1,7 @@
 import { Canvas } from "@/core/canvas";
-import { DIRECTION_MAP, INPUT } from "@/core/core-constants";
+import { DIRECTION_MAP } from "@/core/core-constants";
 import { DisplayKeyboardInput } from "@/core/debug";
 import { KeyboardController } from "@/core/keyboard-controller";
-import { RigidBody } from "@/core/physics/rigid-body";
 import { Node2d } from "@/core/primitives/node-2d";
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
