@@ -8,7 +8,7 @@ import { random } from "lodash";
 export class Apple extends StaticBody {
     constructor() {
         super();
-        this.appendChild(new Sprite(Point.ZeroZero, AssetUtil.load("/snake/apple")));
+        this.appendChild(new Sprite(Point.ZeroZero, AssetUtil.load("apple")));
     }
 
     placeNewApple(liveArea: Rectangle) {

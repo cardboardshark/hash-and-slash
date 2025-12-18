@@ -67,7 +67,7 @@ scoreContainer.set({ x: 0, y: canvas.height - 5 });
 
 scene.appendChild(scoreContainer);
 
-const background = new Sprite(new Point(canvas.width - 2, canvas.height - 6), AssetUtil.load("/snake/tree"));
+const background = new Sprite(new Point(canvas.width - 2, canvas.height - 6), AssetUtil.load("tree"));
 background.origin = "100% 100%";
 scene.appendChild(background);
 
@@ -87,7 +87,7 @@ scene.appendChild(pong);
  * Death Screen
  */
 const skull = new Sprite(new Point(2, 3), {
-    content: AssetUtil.load("snake/skull"),
+    content: AssetUtil.load("skull"),
     width: 10,
     height: 6,
     numFrames: 10,

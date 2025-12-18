@@ -8,7 +8,7 @@ export class Wall extends StaticBody {
     constructor(rect: Rectangle) {
         super();
         this.rect = rect;
-        this.rect.background = AssetUtil.load("snake/wall");
+        this.rect.background = AssetUtil.load("wall");
         this.set(rect.position);
     }
 

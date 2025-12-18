@@ -30,7 +30,7 @@ export class Player extends RigidBody {
         // this.trail = new Trail(() => this.point.round(), Player.InitialMaxTrailLength);
         // this.trail.add(initialPosition);
         this.set(initialPosition);
-        this.sprite = new RotatingSprite(Point.ZeroZero, { content: AssetUtil.load("snake/rocket"), width: 3, height: 3, numFrames: 4 });
+        this.sprite = new RotatingSprite(Point.ZeroZero, { content: AssetUtil.load("rocket"), width: 3, height: 3, numFrames: 4 });
     }
 
     process() {
