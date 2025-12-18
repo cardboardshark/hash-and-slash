@@ -2,9 +2,8 @@ import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
-import { Polygon } from "@/core/primitives/polygon";
 import { BoundingBox, PointLike, PointLikeFn } from "@/core/types/primitive-types";
-import { mergeBoundingBoxes } from "@/core/utils/geometry-util";
+import { mergeBoundingBoxes, offsetBoundingBox } from "@/core/utils/geometry-util";
 import { lerp } from "@/core/utils/math-utils";
 import { parsePositionString } from "@/core/utils/string-util";
 
@@ -21,6 +20,8 @@ export class Node2d {
 
     // defaults to top-left of element
     origin?: string;
+    hasBoundingBoxChanged = false;
+    memoizedBoundingBox?: BoundingBox;
 
     constructor() {
         this.nodeId = id;
@@ -35,7 +36,7 @@ export class Node2d {
             this.x = pointOrPointFn.x;
             this.y = pointOrPointFn.y;
         }
-
+        this.hasBoundingBoxChanged = true;
         return this;
     }
 
@@ -53,21 +54,12 @@ export class Node2d {
         return new Point(this.x, this.y);
     }
 
-    set position(pointlike: PointLike) {
-        if (typeof pointlike === "function") {
-            this.pointReferenceFn = pointlike;
-        } else {
-            this.x = pointlike.x;
-            this.y = pointlike.y;
-        }
-    }
-
     get originPosition() {
-        if (this.origin == undefined) {
+        if (this.origin === undefined || this.memoizedBoundingBox === undefined) {
             return this.position;
         }
 
-        const dimensions = this.boundingBox;
+        const dimensions = this.memoizedBoundingBox;
         const originOffset = parsePositionString(this.origin);
         let offsetX = 0;
         let offsetY = 0;
@@ -89,6 +81,7 @@ export class Node2d {
 
     setOrigin(value?: string) {
         this.origin = value;
+        this.hasBoundingBoxChanged = true;
         return this;
     }
 
@@ -96,19 +89,39 @@ export class Node2d {
         if (this.children.has(node) === false) {
             this.children.add(node);
         }
+        this.hasBoundingBoxChanged = true;
         return this;
     }
     removeChild(node: ValidChildren) {
         this.children.delete(node);
+        this.hasBoundingBoxChanged = true;
         return this;
     }
     setChildren(nodeList: ValidChildren[]) {
         this.children = new Set<ValidChildren>(nodeList);
+        this.hasBoundingBoxChanged = true;
         return this;
     }
 
     get boundingBox(): BoundingBox {
-        return mergeBoundingBoxes(Array.from(this.children.values()).map((c) => c.boundingBox));
+        if (this.memoizedBoundingBox === undefined || this.hasBoundingBoxChanged === true) {
+            if (this.children.size > 0) {
+                const mergedBox = mergeBoundingBoxes(Array.from(this.children.values()).map((c) => c.boundingBox));
+                this.memoizedBoundingBox = offsetBoundingBox(mergedBox, this.originPosition);
+                this.hasBoundingBoxChanged = false;
+                console.log("done");
+            }
+        }
+        return (
+            this.memoizedBoundingBox ?? {
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+                width: 0,
+                height: 0,
+            }
+        );
     }
 
     // get collider(): Polygon {

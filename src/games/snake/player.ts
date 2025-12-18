@@ -1,22 +1,13 @@
-import { DIRECTION_MAP, INPUT } from "@/core/core-constants";
-import { PhysicsBody } from "@/core/physics/physic-body";
+import { DIRECTION_MAP } from "@/core/core-constants";
 import { RigidBody } from "@/core/physics/rigid-body";
-import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Node2d } from "@/core/primitives/node-2d";
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { RotatingSprite } from "@/core/primitives/rotating-sprite";
-import { Sprite } from "@/core/primitives/sprite";
 import { Text } from "@/core/primitives/text";
-import { Pixel } from "@/core/types/canvas-types";
-import type { IntersectingPixels, PointLike } from "@/core/types/primitive-types";
+import type { PointLike } from "@/core/types/primitive-types";
 import type { TickerDelta } from "@/core/types/ticker-types";
 import { AssetUtil } from "@/core/utils/asset-util";
-import { calculateBoundingBoxFromPoints } from "@/core/utils/geometry-util";
-import { Apple } from "@/games/snake/apple";
-import { Trail } from "@/games/snake/trail";
-import { Wall } from "@/games/snake/wall";
-import { uniqBy } from "lodash";
 interface PlayerOptions {
     initialPosition: PointLike;
     initialVector?: PointLike;
@@ -31,10 +22,8 @@ export class Player extends RigidBody {
 
     // trail;
     fill = "█";
-    isAlive = true;
     sprite;
     damage: Point[] = [];
-    score = 0;
 
     constructor({ initialPosition }: PlayerOptions) {
         super();
@@ -44,23 +33,40 @@ export class Player extends RigidBody {
         this.sprite = new RotatingSprite(Point.ZeroZero, { content: AssetUtil.load("snake/rocket"), width: 3, height: 3, numFrames: 4 });
     }
 
-    bodyEntered(other: PhysicsBody, intersections: IntersectingPixels[]) {
-        this.isAlive = false;
-        if (other instanceof Wall) {
-            const existingDamage = this.damage.reduce<Record<string, Point>>((acc, p) => {
-                acc[`${p.x},${p.y}`] = p;
-                return acc;
-            }, {});
-            const incomingDamage = intersections.reduce<Record<string, Point>>((acc, i) => {
-                acc[`${i.source.x},${i.source.y}`] = new Point(i.source);
-                return acc;
-            }, {});
-
-            this.damage = Object.values({ ...existingDamage, ...incomingDamage });
-        } else if (other instanceof Apple) {
-            this.score += 1;
+    process() {
+        if (this.constantForce?.equals(DIRECTION_MAP.left.vector)) {
+            this.setOrigin("0 50%");
+            this.sprite.setFrame("left");
+            // rotation = 180;
+        } else if (this.constantForce?.equals(DIRECTION_MAP.right.vector)) {
+            this.sprite.setFrame("right");
+            this.setOrigin("100% 50%");
+            // rotation = 0;
+        } else if (this.constantForce?.equals(DIRECTION_MAP.down.vector)) {
+            this.sprite.setFrame("down");
+            this.setOrigin("50% 100%");
+            // rotation = 90;
+        } else if (this.constantForce?.equals(DIRECTION_MAP.up.vector)) {
+            this.setOrigin("50% 0");
+            this.sprite.setFrame("up");
+            // rotation = 270;
         }
     }
+
+    // bodyEntered(other: PhysicsBody, intersections: IntersectingPixels[]) {
+    //     if (other instanceof Wall) {
+    //         const existingDamage = this.damage.reduce<Record<string, Point>>((acc, p) => {
+    //             acc[`${p.x},${p.y}`] = p;
+    //             return acc;
+    //         }, {});
+    //         const incomingDamage = intersections.reduce<Record<string, Point>>((acc, i) => {
+    //             acc[`${i.source.x},${i.source.y}`] = new Point(i.source);
+    //             return acc;
+    //         }, {});
+
+    //         this.damage = Object.values({ ...existingDamage, ...incomingDamage });
+    //     }
+    // }
 
     move(delta: TickerDelta, vector: Point, numApplesCollected: number) {
         // this.speed = 1 + numApplesCollected / 5;
@@ -86,52 +92,53 @@ export class Player extends RigidBody {
     }
 
     get boundingBox() {
-        const rect = new Rectangle(this.position, 3, 3);
-        rect.origin = this.origin;
-        return rect.boundingBox;
+        return new Rectangle(this.originPosition, 3, 3).boundingBox;
     }
 
     draw() {
-        const container = new Node2d();
-        container.set(this.position);
-
-        const sprite = this.sprite;
-
-        sprite.setFrame("up");
-        this.origin = "100% 50%";
-        let rotation = 0;
-
-        const rect = new Rectangle(Point.ZeroZero, 3, 3);
-        if (this.constantForce?.equals(DIRECTION_MAP.left.vector)) {
-            this.origin = "0 50%";
-            sprite.setFrame("left");
-            rotation = 180;
-        } else if (this.constantForce?.equals(DIRECTION_MAP.right.vector)) {
-            sprite.setFrame("right");
-            this.origin = "100% 50%";
-            rotation = 0;
-        } else if (this.constantForce?.equals(DIRECTION_MAP.down.vector)) {
-            sprite.setFrame("down");
-            this.origin = "50% 100%";
-            rotation = 90;
-        } else if (this.constantForce?.equals(DIRECTION_MAP.up.vector)) {
-            this.origin = "50% 0";
-            sprite.setFrame("up");
-            rotation = 270;
-        }
-        container.appendChild(sprite);
-
-        // rect.origin = this.origin;
-        // rect.background = { src: "123\n345\n678" };
-        // rect.rotate = rotation;
-        // container.appendChild(rect);
-        const damage = Text.fromPoints(Point.ZeroZero, this.damage);
-        damage.rotate = rotation;
-        container.appendChild(damage);
-        // .rotate(rotation).toString();
-        // console.log("HEY", this.damage, damageBuffer);
-        // container.appendChild(new Text(new Point(0, 0), damageBuffer));
-
-        return container.draw();
+        return this.sprite.draw();
     }
+
+    // draw() {
+    //     const container = new Node2d();
+
+    //     const sprite = this.sprite;
+
+    //     sprite.setFrame("up");
+    //     this.origin = "100% 50%";
+    //     let rotation = 0;
+
+    //     const rect = new Rectangle(Point.ZeroZero, 3, 3);
+    //     if (this.constantForce?.equals(DIRECTION_MAP.left.vector)) {
+    //         this.origin = "0 50%";
+    //         sprite.setFrame("left");
+    //         rotation = 180;
+    //     } else if (this.constantForce?.equals(DIRECTION_MAP.right.vector)) {
+    //         sprite.setFrame("right");
+    //         this.origin = "100% 50%";
+    //         rotation = 0;
+    //     } else if (this.constantForce?.equals(DIRECTION_MAP.down.vector)) {
+    //         sprite.setFrame("down");
+    //         this.origin = "50% 100%";
+    //         rotation = 90;
+    //     } else if (this.constantForce?.equals(DIRECTION_MAP.up.vector)) {
+    //         this.origin = "50% 0";
+    //         sprite.setFrame("up");
+    //         rotation = 270;
+    //     }
+    //     container.appendChild(sprite);
+
+    //     // rect.origin = this.origin;
+    //     // rect.background = { src: "123\n345\n678" };
+    //     // rect.rotate = rotation;
+    //     // container.appendChild(rect);
+    //     const damage = Text.fromPoints(Point.ZeroZero, this.damage);
+    //     damage.rotate = rotation;
+    //     container.appendChild(damage);
+    //     // .rotate(rotation).toString();
+    //     // console.log("HEY", this.damage, damageBuffer);
+    //     // container.appendChild(new Text(new Point(0, 0), damageBuffer));
+
+    //     return container.draw();
+    // }
 }

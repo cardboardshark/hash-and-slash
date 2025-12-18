@@ -2,6 +2,7 @@ import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Node2d } from "@/core/primitives/node-2d";
+import { DebugRectangle } from "@/core/pipeline/debug-rectangle";
 
 interface CanvasOptions {
     width: number;
@@ -28,16 +29,14 @@ export class Canvas {
         let screen = new DrawBuffer();
         screen.fillRectangle(screenRect);
 
-        // if (this.debugMode) {
-        //     const debugRect = new DebugRectangle(this.width, this.height);
-        //     screen.merge(this.#renderShape(debugRect.toRenderable()), {
-        //         offset: new Point(0, 0).subtract(debugRect.offset),
-        //     });
-        // }
+        if (this.debugMode) {
+            const debugRect = new DebugRectangle(this.width, this.height);
+            screen.merge(debugRect.draw(), {
+                offset: new Point(0, 0).subtract(debugRect.offset),
+            });
+        }
 
-        // console.log("STARTING", container);
         screen.merge(container.draw(), { limit: screenRect });
-        // this.#recursiveDraw(container, screen, screenRect);
 
         if (!this.element) {
             console.log(this.element);

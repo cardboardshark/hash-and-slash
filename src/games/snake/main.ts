@@ -1,10 +1,9 @@
 import { Canvas } from "@/core/canvas";
+import { DIRECTION_MAP, INPUT } from "@/core/core-constants";
 import { DisplayKeyboardInput } from "@/core/debug";
 import { KeyboardController } from "@/core/keyboard-controller";
-import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-import { Line } from "@/core/primitives/line";
+import { RigidBody } from "@/core/physics/rigid-body";
 import { Node2d } from "@/core/primitives/node-2d";
-
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Sprite } from "@/core/primitives/sprite";
@@ -13,15 +12,10 @@ import { Scene } from "@/core/scene";
 import { Ticker } from "@/core/ticker";
 import { AssetUtil } from "@/core/utils/asset-util";
 import { Apple } from "@/games/snake/apple";
+import { Bouncy } from "@/games/snake/bouncy";
 import { PipeBox } from "@/games/snake/pipe-box";
 import { Player } from "@/games/snake/player";
 import { Wall } from "@/games/snake/wall";
-
-/**
- * TODO:
- * collission detection does not detect 1-height lines on same axis ( ie o -> o )
- *
- */
 
 const ticker = new Ticker();
 const input = new KeyboardController();
@@ -35,9 +29,17 @@ const canvas = new Canvas({
 canvas.debugMode = true;
 
 /**
+ * Game State
+ */
+let numApples = 0;
+let isAlive = true;
+
+/**
  * Entities
  */
 const player = new Player({ initialPosition: new Point(3, 3) });
+
+const liveArea = new Rectangle(new Point(1, 1), canvas.width - 1, canvas.height - 6);
 
 // scene.appendChild(new Wall(new Rectangle(new Point(8, 8), 10, 10)));
 scene.appendChild(new Wall(new Rectangle(new Point(0, 0), canvas.width, 1)));
@@ -45,7 +47,8 @@ scene.appendChild(new Wall(new Rectangle(new Point(0, 0), 1, canvas.height - 6))
 scene.appendChild(new Wall(new Rectangle(new Point(canvas.width - 1, 0), 1, canvas.height - 6)));
 scene.appendChild(new Wall(new Rectangle(new Point(0, canvas.height - 6), canvas.width, 1)));
 
-const apple = new Apple({ x: 5, y: 5 });
+const apple = new Apple();
+apple.placeNewApple(liveArea);
 scene.appendChild(apple);
 
 /**
@@ -54,13 +57,12 @@ scene.appendChild(apple);
 const scoreBox = new Rectangle(Point.ZeroZero, canvas.width, 5);
 scoreBox.background = { fill: "█" };
 
-const scoreText = new Text(new Point(scoreBox.position).add({ x: 1, y: 1 }), `\nMy score is: ${apple.numCollected}\n`, {
+const scoreText = new Text(new Point(scoreBox.position).add({ x: 1, y: 1 }), `\nMy score is: ${numApples}\n`, {
     width: canvas.width - 2,
     align: "center",
     fill: " ",
 });
 
-// const liveArea = new PipeBox(Point.ZeroZero, canvas.width, canvas.height - 5);
 const scoreContainer = new Node2d().setChildren([scoreBox, scoreText]);
 scoreContainer.set({ x: 0, y: canvas.height - 5 });
 
@@ -70,9 +72,17 @@ const background = new Sprite(new Point(canvas.width - 2, canvas.height - 6), As
 background.origin = "100% 100%";
 scene.appendChild(background);
 
-// scene.appendChild(new Line(new Point(5, 5), new Point(10, 5)));
-
 scene.appendChild(player);
+
+const pong = new Bouncy();
+pong.set(new Point(20, 10));
+pong.constantForce = DIRECTION_MAP.down.vector;
+pong.on("bodyEntered", ({ other }) => {
+    if (other instanceof Wall && pong.constantForce) {
+        pong.constantForce = pong.constantForce.rotate(180);
+    }
+});
+scene.appendChild(pong);
 
 /**
  * Death Screen
@@ -95,31 +105,38 @@ skullContainer.id = "skucontainer";
 skullContainer.visible = false;
 scene.appendChild(skullContainer);
 
+player.on("bodyEntered", ({ other }) => {
+    if (other instanceof Apple) {
+        numApples += 1;
+        player.inertia += 0.5;
+    } else if (other instanceof Wall || other instanceof Bouncy) {
+        isAlive = false;
+    }
+});
+player.on("bodyExited", ({ other }) => {
+    if (other instanceof Apple) {
+        apple.placeNewApple(liveArea);
+    }
+});
+
 /**
  * Game Loop
  */
 ticker.add((delta) => {
-    // if (player.isAlive) {
     if (input.isDeadStick() === false) {
         player.constantForce = input.cardinalVector;
     }
 
+    player.process();
     scene.process(delta);
 
-    // if (apple.canPlayerClaimApple(player)) {
-    //     apple.claimApple();
-    //     apple.generateApple(liveArea.rectangle, new PolyLine([]));
-    // }
+    scoreText.text = `\nMy score is: ${numApples}\n`;
 
-    scoreText.text = `\nMy score is: ${player.score}\n`;
-
-    // buffer.appendChild(apple);
-
-    // if (player.isAlive === false) {
-    //     skull.next(10 * delta.deltaTime);
-    //     skullContainer.visible = true;
-    //     // ticker.paused = true;
-    // }
+    if (isAlive === false) {
+        skull.next(10 * delta.deltaTime);
+        skullContainer.visible = true;
+        ticker.paused = true;
+    }
 
     canvas.draw(scene);
 });

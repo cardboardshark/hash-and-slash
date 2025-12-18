@@ -2,7 +2,6 @@ import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { BoundingBox, PointLike } from "@/core/types/primitive-types";
 import { parsePositionString } from "@/core/utils/string-util";
-import { isEqual, range } from "lodash";
 
 export function convertRadianToVector(radian: number): PointLike {
     return { x: Math.cos(radian), y: -Math.sin(radian) };
@@ -36,6 +35,17 @@ export function mergeBoundingBoxes(boxes: BoundingBox[]): BoundingBox {
         return acc;
     }, []);
     return calculateBoundingBoxFromPoints(allPoints);
+}
+
+export function offsetBoundingBox(box: BoundingBox, offset: PointLike): BoundingBox {
+    return {
+        top: box.top + offset.y,
+        right: box.right + offset.x,
+        bottom: box.bottom + offset.y,
+        left: box.left + offset.x,
+        width: box.width,
+        height: box.height,
+    };
 }
 
 export function calculateVectorBetweenPoints(p0: PointLike, p1: PointLike) {

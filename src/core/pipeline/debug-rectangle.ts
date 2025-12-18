@@ -1,8 +1,7 @@
 import { Point } from "@/core/primitives/point";
 import { Text } from "@/core/primitives/text";
-import { RenderableEntity } from "@/core/types/primitive-types";
 
-export class DebugRectangle implements RenderableEntity {
+export class DebugRectangle {
     width;
     height;
 
@@ -18,7 +17,7 @@ export class DebugRectangle implements RenderableEntity {
         };
     }
 
-    toRenderable() {
+    draw() {
         const widthOffset = this.offset.x;
         const heightOffset = this.offset.y;
         const totalHeight = this.height + heightOffset * 2;
@@ -48,6 +47,6 @@ export class DebugRectangle implements RenderableEntity {
             })
             .join("\n");
 
-        return new Text(Point.ZeroZero, content);
+        return new Text(Point.ZeroZero, content).draw();
     }
 }

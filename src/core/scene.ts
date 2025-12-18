@@ -36,8 +36,8 @@ export class Scene extends Node2d {
 
     process(delta: TickerDelta) {
         const allBodies = Array.from(this.#bodyRegistry);
-
-        allBodies.forEach((body) => {
+        const rigidBodies = allBodies.filter((b) => b instanceof RigidBody);
+        rigidBodies.forEach((body) => {
             let initialPosition = body.position.clone();
             let currentPosition = body.position.clone();
 
@@ -49,7 +49,7 @@ export class Scene extends Node2d {
             }
 
             if (initialPosition.equals(currentPosition) === false) {
-                body.position = currentPosition;
+                body.set(currentPosition);
 
                 // fast loose check
                 const nearbyBodies = allBodies.filter((other) => other !== body && doBodiesOverlap(body, other, COLLISION_HULL_THICKNESS));
@@ -71,10 +71,8 @@ export class Scene extends Node2d {
                 intersectingBodies.forEach(({ other, intersections }) => {
                     if (body.contacts.has(other) === false) {
                         body.contacts.add(other);
-                        body.bodyEntered(other, intersections);
+                        body._bodyEntered(other, intersections);
                     }
-
-                    body.bodyContact(intersections);
                 });
 
                 // Find persistent contacts
@@ -89,10 +87,10 @@ export class Scene extends Node2d {
                     );
 
                     if (intersections.length > 0) {
-                        body.bodyContact(intersections);
+                        body._bodyContact(other, intersections);
                     } else {
                         body.contacts.delete(other);
-                        body.bodyExited(other);
+                        body._bodyExited(other);
                     }
                 });
 
