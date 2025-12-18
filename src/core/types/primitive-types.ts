@@ -6,6 +6,8 @@ import { Rectangle } from "@/core/primitives/rectangle";
 import { Text } from "@/core/primitives/text";
 import { Pixel } from "@/core/types/canvas-types";
 
+// This contains both direction ( the vector ) and speed ( the magnitude ).
+export type Velocity = { x: number; y: number };
 export type PointLike = { x: number; y: number };
 export type PointLikeFn = () => { x: number; y: number };
 

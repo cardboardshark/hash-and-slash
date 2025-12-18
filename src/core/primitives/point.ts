@@ -111,10 +111,10 @@ export class Point {
         });
     }
 
-    multiplyScalar(magnitude: number) {
+    multiplyScalar(magnitude: number, precision = 5) {
         return new Point({
-            x: this.x * magnitude,
-            y: this.y * magnitude,
+            x: parseFloat((this.x * magnitude).toFixed(precision)),
+            y: parseFloat((this.y * magnitude).toFixed(precision)),
         });
     }
 
@@ -124,6 +124,13 @@ export class Point {
 
     magnitudeSquared() {
         return this.x * this.x + this.y * this.y;
+    }
+
+    toPrecision(decimals: number) {
+        return new Point({
+            x: parseFloat(this.x.toFixed(decimals)),
+            y: parseFloat(this.y.toFixed(decimals)),
+        });
     }
 
     project(vector: PointLike, magnitude: number) {

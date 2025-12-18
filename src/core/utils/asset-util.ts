@@ -4,7 +4,6 @@ export const AssetUtil = {
     load(filename: string) {
         const importableAssets = import.meta.glob<string>("/assets/**/*.txt", { eager: true, query: "?raw", import: "default" });
         const importKey = Object.keys(importableAssets).find((key) => key.endsWith(`${filename}.txt`));
-        console.log(importableAssets, filename, importKey);
         if (importKey) {
             return importableAssets[importKey].replaceAll(" ", BLANK_CHARACTER);
         }

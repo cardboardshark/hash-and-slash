@@ -107,7 +107,7 @@ scene.appendChild(skullContainer);
 player.on("bodyEntered", ({ other }) => {
     if (other instanceof Apple) {
         numApples += 1;
-        player.inertia += 0.5;
+        player.speed += 0.5;
     } else if (other instanceof Wall || other instanceof Bouncy) {
         isAlive = false;
     }
@@ -123,7 +123,7 @@ player.on("bodyExited", ({ other }) => {
  */
 ticker.add((delta) => {
     if (input.isDeadStick() === false) {
-        player.constantForce = input.cardinalVector;
+        player.constantForce = input.cardinalVector.multiplyScalar(player.speed);
     }
 
     player.process();

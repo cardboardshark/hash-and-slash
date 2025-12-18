@@ -1,11 +1,11 @@
 import { PhysicsBody } from "@/core/physics/physic-body";
 import { RigidBody } from "@/core/physics/rigid-body";
-import { StaticBody } from "@/core/physics/static-body";
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Line } from "@/core/primitives/line";
 import { Node2d } from "@/core/primitives/node-2d";
+import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
-import { IntersectingPixels } from "@/core/types/primitive-types";
+import { IntersectingPixels, Velocity } from "@/core/types/primitive-types";
 import { TickerDelta } from "@/core/types/ticker-types";
 import { doBodiesOverlap } from "@/core/utils/collision-util";
 
@@ -17,18 +17,19 @@ interface BodyIntersection {
 }
 export class Scene extends Node2d {
     id = "scene";
+    constantForce: Velocity = Point.ZeroZero;
 
     #bodyRegistry = new Set<PhysicsBody>();
 
     // Wrap appendChild and removeChild to detect physics bodies
     appendChild(node: ValidChildren) {
-        if (node instanceof RigidBody || node instanceof StaticBody) {
+        if (node instanceof PhysicsBody) {
             this.#bodyRegistry.add(node);
         }
         return super.appendChild(node);
     }
     removeChild(node: ValidChildren) {
-        if (node instanceof RigidBody || node instanceof StaticBody) {
+        if (node instanceof PhysicsBody) {
             this.#bodyRegistry.delete(node);
         }
         return super.removeChild(node);
@@ -38,13 +39,19 @@ export class Scene extends Node2d {
         const allBodies = Array.from(this.#bodyRegistry);
         const rigidBodies = allBodies.filter((b) => b instanceof RigidBody);
         rigidBodies.forEach((body) => {
-            let initialPosition = body.position.clone();
-            let currentPosition = body.position.clone();
+            let initialPosition = body.precisePosition.clone();
+            let currentPosition = body.precisePosition.clone();
 
             if (body instanceof RigidBody) {
-                if (body.constantForce) {
-                    const constantForceVector = body.constantForce.multiplyScalar(body.inertia * delta.deltaMS);
-                    currentPosition = body.precisePosition.add(constantForceVector);
+                currentPosition = currentPosition.add(new Point(this.constantForce).multiplyScalar(delta.deltaMS));
+                currentPosition = currentPosition.add(new Point(body.constantForce).multiplyScalar(delta.deltaMS));
+                currentPosition = currentPosition.add(new Point(body.linearVelocity).multiplyScalar(delta.deltaMS));
+
+                if (new Point(body.linearVelocity).roughlyEquals(Point.ZeroZero)) {
+                    body.linearVelocity = Point.ZeroZero;
+                } else if (body.linearDamp > 0) {
+                    const magnitude = new Point(body.linearVelocity).magnitude() - body.linearDamp * delta.deltaMS;
+                    body.linearVelocity = new Point(body.linearVelocity).normalize().multiplyScalar(magnitude);
                 }
             }
 

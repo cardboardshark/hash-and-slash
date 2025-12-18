@@ -1,10 +1,8 @@
 import { DIRECTION_MAP } from "@/core/core-constants";
 import { RigidBody } from "@/core/physics/rigid-body";
-import { Node2d } from "@/core/primitives/node-2d";
 import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { RotatingSprite } from "@/core/primitives/rotating-sprite";
-import { Text } from "@/core/primitives/text";
 import type { PointLike } from "@/core/types/primitive-types";
 import type { TickerDelta } from "@/core/types/ticker-types";
 import { AssetUtil } from "@/core/utils/asset-util";
@@ -14,12 +12,11 @@ interface PlayerOptions {
     initialSpeed?: number;
 }
 export class Player extends RigidBody {
-    static InitialSpeed = 1;
     static InitialMaxTrailLength = 5;
     // toggle to allow player to turn back
     allowReversing = false;
-    inertia = 1;
 
+    speed = 1;
     // trail;
     fill = "█";
     sprite;
@@ -34,19 +31,20 @@ export class Player extends RigidBody {
     }
 
     process() {
-        if (this.constantForce?.equals(DIRECTION_MAP.left.vector)) {
+        const forceDirection = new Point(this.constantForce).normalize();
+        if (forceDirection.equals(DIRECTION_MAP.left.vector)) {
             this.setOrigin("0 50%");
             this.sprite.setFrame("left");
             // rotation = 180;
-        } else if (this.constantForce?.equals(DIRECTION_MAP.right.vector)) {
+        } else if (forceDirection.equals(DIRECTION_MAP.right.vector)) {
             this.sprite.setFrame("right");
             this.setOrigin("100% 50%");
             // rotation = 0;
-        } else if (this.constantForce?.equals(DIRECTION_MAP.down.vector)) {
+        } else if (forceDirection.equals(DIRECTION_MAP.down.vector)) {
             this.sprite.setFrame("down");
             this.setOrigin("50% 100%");
             // rotation = 90;
-        } else if (this.constantForce?.equals(DIRECTION_MAP.up.vector)) {
+        } else if (forceDirection.equals(DIRECTION_MAP.up.vector)) {
             this.setOrigin("50% 0");
             this.sprite.setFrame("up");
             // rotation = 270;

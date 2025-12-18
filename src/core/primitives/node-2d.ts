@@ -109,7 +109,6 @@ export class Node2d {
                 const mergedBox = mergeBoundingBoxes(Array.from(this.children.values()).map((c) => c.boundingBox));
                 this.memoizedBoundingBox = offsetBoundingBox(mergedBox, this.originPosition);
                 this.hasBoundingBoxChanged = false;
-                console.log("done");
             }
         }
         return (
