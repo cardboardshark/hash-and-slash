@@ -1,12 +1,11 @@
 import { PhysicsBody } from "@/core/physics/physic-body";
 import { Point } from "@/core/primitives/point";
-import { Velocity } from "@/core/types/primitive-types";
 
 let previousId = -1;
 export class RigidBody extends PhysicsBody {
     rid: number;
-    constantForce: Velocity = Point.ZeroZero;
-    linearVelocity: Velocity = Point.ZeroZero;
+    constantForce = new Point(Point.ZeroZero);
+    linearVelocity = new Point(Point.ZeroZero);
     linearDamp = 0;
 
     // rotational mass
@@ -20,7 +19,7 @@ export class RigidBody extends PhysicsBody {
         previousId += 1;
     }
 
-    setConstantForce(velocity: Velocity) {
+    setConstantForce(velocity: Point) {
         this.constantForce = velocity;
     }
     // setConstantTorque(value: number) {

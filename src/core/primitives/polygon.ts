@@ -1,6 +1,5 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
 import { Shape } from "@/core/primitives/shape";
@@ -18,7 +17,11 @@ export class Polygon extends Shape {
 
         this.points = points;
 
-        this.set({ x: this.points[0].x, y: this.points[0].y });
+        const firstPoint = this.points[0];
+
+        if (firstPoint) {
+            this.set({ x: firstPoint.x, y: firstPoint.y });
+        }
     }
 
     get lines() {

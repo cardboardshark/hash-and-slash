@@ -1,10 +1,8 @@
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { Line } from "@/core/primitives/line";
 import { Point } from "@/core/primitives/point";
-
 import { Pixel } from "@/core/types/canvas-types";
 import { PointLike } from "@/core/types/primitive-types";
-
 import { calculateBoundingBoxFromPoints, trimPointsToLength } from "@/core/utils/geometry-util";
 import { calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
 

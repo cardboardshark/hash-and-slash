@@ -1,4 +1,5 @@
 import { Line } from "@/core/primitives/line";
+import { Node2d } from "@/core/primitives/node-2d";
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
 import { Polygon } from "@/core/primitives/polygon";
@@ -6,7 +7,7 @@ import { Ray } from "@/core/primitives/ray";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { Text } from "@/core/primitives/text";
 import { CollisionResult } from "@/core/types/intersection-types";
-import { Renderable, isPointLike } from "@/core/types/primitive-types";
+import { isPointLike } from "@/core/types/primitive-types";
 import { findLineIntersection } from "@/core/utils/collision-util";
 import { orderBy } from "lodash";
 
@@ -15,7 +16,7 @@ export class RayCaster {
     intersections?: CollisionResult[];
     hasIntersection;
 
-    constructor(lineOrRay: Line | Ray, haystack: Renderable | Renderable[]) {
+    constructor(lineOrRay: Line | Ray, haystack: Node2d | Node2d[]) {
         const line = lineOrRay instanceof Ray ? lineOrRay.line : lineOrRay;
         const haystackAsArray = Array.isArray(haystack) ? haystack : [haystack];
 
@@ -40,7 +41,7 @@ export class RayCaster {
         this.hasIntersection = intersections.length > 0;
     }
 
-    #test(line: Line, shape: Renderable): CollisionResult[] {
+    #test(line: Line, shape: Node2d): CollisionResult[] {
         if (shape instanceof Polygon || shape instanceof Rectangle || shape instanceof PolyLine) {
             return shape.lines.reduce<CollisionResult[]>((acc, l) => {
                 const point = findLineIntersection(line, l);

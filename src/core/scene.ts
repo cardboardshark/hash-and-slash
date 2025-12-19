@@ -5,7 +5,7 @@ import { Line } from "@/core/primitives/line";
 import { Node2d } from "@/core/primitives/node-2d";
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
-import { IntersectingPixels, Velocity } from "@/core/types/primitive-types";
+import { IntersectingPixels } from "@/core/types/primitive-types";
 import { TickerDelta } from "@/core/types/ticker-types";
 import { doBodiesOverlap } from "@/core/utils/collision-util";
 
@@ -17,7 +17,7 @@ interface BodyIntersection {
 }
 export class Scene extends Node2d {
     id = "scene";
-    constantForce: Velocity = Point.ZeroZero;
+    constantForce = new Point(Point.ZeroZero);
 
     #bodyRegistry = new Set<PhysicsBody>();
 
@@ -48,7 +48,7 @@ export class Scene extends Node2d {
                 currentPosition = currentPosition.add(new Point(body.linearVelocity).multiplyScalar(delta.deltaMS));
 
                 if (new Point(body.linearVelocity).roughlyEquals(Point.ZeroZero)) {
-                    body.linearVelocity = Point.ZeroZero;
+                    body.linearVelocity = new Point(Point.ZeroZero);
                 } else if (body.linearDamp > 0) {
                     const magnitude = new Point(body.linearVelocity).magnitude() - body.linearDamp * delta.deltaMS;
                     body.linearVelocity = new Point(body.linearVelocity).normalize().multiplyScalar(magnitude);

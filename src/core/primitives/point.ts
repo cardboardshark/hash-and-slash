@@ -1,5 +1,5 @@
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-import { PointLike, PointLikeFn } from "@/core/types/primitive-types";
+import { PointLike } from "@/core/types/primitive-types";
 import { inRange } from "lodash";
 
 export class Point {

@@ -4,25 +4,6 @@ import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { BoundingBox } from "@/core/types/primitive-types";
 
-/**
- * Determine if two Axis-aligned bounding box elements have overlapping pixels.
- */
-// export function doRectanglesIntersect(r0: Rectangle, r1: Rectangle) {
-//     const aRect = {
-//         x: r0.topLeft.x,
-//         y: r0.topLeft.y,
-//         width: r0.bottomRight.x - r0.topLeft.x,
-//         height: r0.bottomRight.y - r0.topLeft.y,
-//     };
-//     const bRect = {
-//         x: r1.topLeft.x,
-//         y: r1.topLeft.y,
-//         width: r1.bottomRight.x - r1.topLeft.x,
-//         height: r1.bottomRight.y - r1.topLeft.y,
-//     };
-//     return aRect.x < bRect.x + bRect.width && aRect.x + aRect.width > bRect.x && aRect.y < bRect.y + bRect.height && aRect.y + aRect.height > bRect.y;
-// }
-
 export function doBodiesOverlap(bodyA: PhysicsBody, bodyB: PhysicsBody, collisonHullThickness = 0) {
     const aRect = {
         x: bodyA.boundingBox.left - collisonHullThickness,
