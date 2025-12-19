@@ -4,7 +4,6 @@ import { Point } from "@/core/primitives/point";
 import { Rectangle } from "@/core/primitives/rectangle";
 import { RotatingSprite } from "@/core/primitives/rotating-sprite";
 import type { PointLike } from "@/core/types/primitive-types";
-import type { TickerDelta } from "@/core/types/ticker-types";
 import { AssetUtil } from "@/core/utils/asset-util";
 interface PlayerOptions {
     initialPosition: PointLike;
@@ -66,28 +65,28 @@ export class Player extends RigidBody {
     //     }
     // }
 
-    move(delta: TickerDelta, vector: Point, numApplesCollected: number) {
-        // this.speed = 1 + numApplesCollected / 5;
-        // this.trail.maxLength = Player.InitialMaxTrailLength + numApplesCollected * 2;
-        // const hasNewInput = vector.equals(this.vector) === false;
-        // const isDeadStick = vector.isZeroZero();
-        // const reverseVector = this.point.subtract(this.vector.add(this.point));
-        // const isReverse = isDeadStick === false && this.allowReversing === false && vector.equals(reverseVector);
-        // // record a change in direction for trail purposes
-        // if (isReverse === false && isDeadStick === false) {
-        //     const isSamePosition = this.trail.points.at(0) ? this.point.roughlyEquals(this.trail.points[0]) : false;
-        //     if (hasNewInput && isSamePosition === false) {
-        //         this.trail.add(this.point.round());
-        //     }
-        //     this.vector = vector;
-        // }
-        // // is the user moving?
-        // if (this.vector.equals({ x: 0, y: 0 }) === false) {
-        //     const playerVectorWithSpeed = this.vector.multiplyScalar(this.speed * delta.deltaMS);
-        //     this.set(this.point.add(playerVectorWithSpeed));
-        //     this.trail.trim();
-        // }
-    }
+    // move(delta: TickerDelta, vector: Point, numApplesCollected: number) {
+    //     // this.speed = 1 + numApplesCollected / 5;
+    //     // this.trail.maxLength = Player.InitialMaxTrailLength + numApplesCollected * 2;
+    //     // const hasNewInput = vector.equals(this.vector) === false;
+    //     // const isDeadStick = vector.isZeroZero();
+    //     // const reverseVector = this.point.subtract(this.vector.add(this.point));
+    //     // const isReverse = isDeadStick === false && this.allowReversing === false && vector.equals(reverseVector);
+    //     // // record a change in direction for trail purposes
+    //     // if (isReverse === false && isDeadStick === false) {
+    //     //     const isSamePosition = this.trail.points.at(0) ? this.point.roughlyEquals(this.trail.points[0]) : false;
+    //     //     if (hasNewInput && isSamePosition === false) {
+    //     //         this.trail.add(this.point.round());
+    //     //     }
+    //     //     this.vector = vector;
+    //     // }
+    //     // // is the user moving?
+    //     // if (this.vector.equals({ x: 0, y: 0 }) === false) {
+    //     //     const playerVectorWithSpeed = this.vector.multiplyScalar(this.speed * delta.deltaMS);
+    //     //     this.set(this.point.add(playerVectorWithSpeed));
+    //     //     this.trail.trim();
+    //     // }
+    // }
 
     get boundingBox() {
         return new Rectangle(this.originPosition, 3, 3).boundingBox;

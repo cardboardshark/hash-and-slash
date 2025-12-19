@@ -26,5 +26,5 @@ export class RigidBody extends PhysicsBody {
     //     this.constantTorque = value;
     // }
 
-    applyImpulse(impulse: Point, position: Point) {}
+    // applyImpulse(impulse: Point, position: Point) {}
 }

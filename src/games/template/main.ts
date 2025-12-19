@@ -18,7 +18,7 @@ canvas.debugMode = true;
 /**
  * Game Loop
  */
-ticker.add((delta) => {
+ticker.add((_delta) => {
     canvas.draw(scene);
 });
 

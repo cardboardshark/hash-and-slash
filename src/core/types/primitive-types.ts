@@ -1,9 +1,3 @@
-import { Line } from "@/core/primitives/line";
-import { Node2d } from "@/core/primitives/node-2d";
-import { PolyLine } from "@/core/primitives/poly-line";
-import { Polygon } from "@/core/primitives/polygon";
-import { Rectangle } from "@/core/primitives/rectangle";
-import { Text } from "@/core/primitives/text";
 import { Pixel } from "@/core/types/canvas-types";
 
 export type PointLike = { x: number; y: number };

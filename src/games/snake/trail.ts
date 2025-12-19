@@ -1,7 +1,7 @@
 import { Point } from "@/core/primitives/point";
 import { PolyLine } from "@/core/primitives/poly-line";
 import type { PointLike } from "@/core/types/primitive-types";
-import { calculateRadianBetweenPoints, calculateVectorBetweenPoints, trimPointsToLength } from "@/core/utils/geometry-util";
+import { calculateVectorBetweenPoints } from "@/core/utils/geometry-util";
 
 export class Trail {
     points: Point[] = [];
@@ -33,7 +33,7 @@ export class Trail {
             return Point.ZeroZero;
         }
 
-        const radian = calculateRadianBetweenPoints(this.points[0], this.ownerPositionFn());
+        // const radian = calculateRadianBetweenPoints(this.points[0], this.ownerPositionFn());
         const vector = calculateVectorBetweenPoints(this.points[0], this.ownerPositionFn());
         // console.log([this.ownerPositionFn(), ...this.points], { radian, vector });
         return vector;
