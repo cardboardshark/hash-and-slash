@@ -3,13 +3,24 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
+    "files": [
+        "dist/**/*"
+    ],
+    "main": "./dist/index.cjs",
+    "types": "./dist/index.d.cts",
+    "module": "./dist/index.js",
+    "exports": {
+        ".": "./dist/index.cjs",
+        "./package.json": "./package.json"
+    },
     "scripts": {
         "dev": "vite",
-        "build": "tsc && vite build",
+        "build": "tsdown",
         "preview": "vite preview"
     },
     "dependencies": {
-        "lodash": "^4.17.21"
+        "lodash": "^4.17.21",
+        "tsdown": "^0.18.1"
     },
     "devDependencies": {
         "@types/lodash": "^4.17.21",

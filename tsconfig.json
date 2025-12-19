@@ -14,6 +14,7 @@
         "moduleResolution": "Bundler",
         "noEmit": false,
         "noImplicitReturns": true,
+        "noUncheckedIndexedAccess": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "resolveJsonModule": true,
@@ -28,5 +29,6 @@
         }
     },
     "copyPublicDir": false,
-    "include": ["src"]
+    "include": ["src/"],
+    "exclude": ["dist/"]
 }
