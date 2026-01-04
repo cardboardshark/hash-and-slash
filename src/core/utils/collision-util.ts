@@ -1,7 +1,7 @@
+import { Line } from "@/core/geometry/line";
+import { Point } from "@/core/geometry/point";
+import { Rectangle } from "@/core/geometry/rectangle";
 import { PhysicsBody } from "@/core/physics/physic-body";
-import { Line } from "@/core/primitives/line";
-import { Point } from "@/core/primitives/point";
-import { Rectangle } from "@/core/primitives/rectangle";
 import { BoundingBox } from "@/core/types/primitive-types";
 
 export function doBodiesOverlap(bodyA: PhysicsBody, bodyB: PhysicsBody, collisonHullThickness = 0) {

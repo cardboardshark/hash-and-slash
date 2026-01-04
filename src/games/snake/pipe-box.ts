@@ -1,7 +1,8 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
+import { Point } from "@/core/geometry/point";
+import { Rectangle } from "@/core/geometry/rectangle";
 import { Node2d } from "@/core/primitives/node-2d";
-import { Point } from "@/core/primitives/point";
-import { Rectangle } from "@/core/primitives/rectangle";
+import { RectangleShape } from "@/core/primitives/rectangle-shape";
 
 export class PipeBox extends Node2d {
     fill = BLANK_CHARACTER;
@@ -56,7 +57,7 @@ export class PipeBox extends Node2d {
             content += "\n";
         }
 
-        const rect = new Rectangle(this.position, this.width, this.height);
+        const rect = new RectangleShape(this.position, this.width, this.height);
         rect.background = { src: content, fill: BLANK_CHARACTER };
         return rect.draw();
     }

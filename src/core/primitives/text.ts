@@ -1,20 +1,18 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
+import { Point } from "@/core/geometry/point";
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-import { Point } from "@/core/primitives/point";
-import { Shape } from "@/core/primitives/shape";
+import { Node2d } from "@/core/primitives/node-2d";
 import { PointLike, TextOptions } from "@/core/types/primitive-types";
 import { calculateBoundingBoxFromPoints } from "@/core/utils/geometry-util";
 
-export class Text extends Shape {
+export class Text extends Node2d {
     text;
     options;
     fill = BLANK_CHARACTER;
 
     constructor(point: PointLike, text: string | number, options?: TextOptions) {
         super();
-
         this.set(new Point(point.x, point.y));
-
         this.text = text;
         this.options = options;
     }
@@ -52,7 +50,7 @@ export class Text extends Shape {
         return DrawBuffer.parse(output.join("\n"));
     }
 
-    get boundingBox() {
+    get dimensions() {
         const splitText = String(this.text).split("\n");
         const longestRow = splitText.reduce((max, line) => {
             if (line.length > max) {
@@ -61,25 +59,20 @@ export class Text extends Shape {
             return max;
         }, 0);
 
-        const { width, align = "left" } = this.options ?? {};
-        const numCharacters = width ?? longestRow;
+        const width = this.options?.width ?? longestRow;
 
-        let xPos = this.position.x;
-        if (width === undefined && align !== undefined) {
-            if (align === "right") {
-                xPos -= numCharacters;
-            } else if (align === "center") {
-                xPos -= Math.floor(numCharacters / 2);
-            }
-        }
+        return { width, height: splitText.length };
+    }
 
+    get boundingBox() {
+        const dimensions = this.dimensions;
         return {
-            left: xPos,
-            right: xPos + numCharacters,
+            left: this.position.x,
+            right: this.position.x + dimensions.width,
             top: this.position.y,
-            bottom: this.position.y + splitText.length,
-            width: numCharacters,
-            height: splitText.length,
+            bottom: this.position.y + dimensions.height,
+            width: dimensions.width,
+            height: dimensions.height,
         };
     }
 

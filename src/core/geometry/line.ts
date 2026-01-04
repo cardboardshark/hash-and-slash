@@ -1,19 +1,11 @@
-import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-import { Point } from "@/core/primitives/point";
-import { Background } from "@/core/shaders/background";
-import { Shader } from "@/core/shaders/shader";
-import { Pixel } from "@/core/types/canvas-types";
-import { PointLike, BackgroundOptions } from "@/core/types/primitive-types";
+import { Point } from "@/core/geometry/point";
+import { PointLike } from "@/core/types/primitive-types";
 import { calculateBoundingBoxFromPoints, calculateRadianBetweenPoints, convertRadianToVector } from "@/core/utils/geometry-util";
-import { calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
 
+/** Geometry line that cannot be directly drawn. */
 export class Line {
     start;
     end;
-    stroke = "l";
-    background?: string | number | Background | BackgroundOptions;
-    shaders: Shader[] = [];
-    visible = true;
 
     constructor(p0: PointLike, p1: PointLike) {
         this.start = new Point(p0);
@@ -28,14 +20,17 @@ export class Line {
         return calculateRadianBetweenPoints(this.start, this.end);
     }
 
-    toPoints() {
-        const points: PointLike[] = [];
-        const N = calculateDiagonalDistance(this.start, this.end);
-        for (let step = 0; step <= N; step++) {
-            let t = N === 0 ? 0.0 : step / N;
-            points.push(lerpPoint(this.start, this.end, t));
-        }
-        return points;
+    get points() {
+        return [this.start, this.end];
+    }
+
+    get dimensions() {
+        const box = calculateBoundingBoxFromPoints(this.points);
+        return { width: box.width, height: box.height };
+    }
+
+    get boundingBox() {
+        return calculateBoundingBoxFromPoints(this.points);
     }
 
     rotate(radian: number) {
@@ -69,24 +64,5 @@ export class Line {
 
         // Return the unit normal vector
         return new Point(normalX / magnitude, normalY / magnitude);
-    }
-
-    draw() {
-        let pixels: Pixel[] = [];
-        const diagonalDistance = calculateDiagonalDistance(this.start, this.end);
-        for (let step = 0; step <= diagonalDistance; step++) {
-            const t = diagonalDistance === 0 ? 0.0 : step / diagonalDistance;
-            const { x, y } = lerpPoint(this.start, this.end, t);
-            pixels.push({
-                x,
-                y,
-                value: String(this.stroke).substring(0, 1),
-            });
-        }
-        return new DrawBuffer(pixels);
-    }
-
-    get boundingBox() {
-        return calculateBoundingBoxFromPoints([this.start, this.end]);
     }
 }

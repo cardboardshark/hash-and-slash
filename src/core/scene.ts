@@ -1,16 +1,15 @@
+import { Point } from "@/core/geometry/point";
 import { PhysicsBody } from "@/core/physics/physic-body";
 import { RigidBody } from "@/core/physics/rigid-body";
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-import { Line } from "@/core/primitives/line";
+import { LineShape } from "@/core/primitives/line-shape";
 import { Node2d } from "@/core/primitives/node-2d";
-import { Point } from "@/core/primitives/point";
-import { PolyLine } from "@/core/primitives/poly-line";
+import { PolyLineShape } from "@/core/primitives/poly-line-shape";
 import { IntersectingPixels } from "@/core/types/primitive-types";
 import { TickerDelta } from "@/core/types/ticker-types";
 import { doBodiesOverlap } from "@/core/utils/collision-util";
 
-type ValidChildren = Node2d | Line | PolyLine;
-const COLLISION_HULL_THICKNESS = 1;
+type ValidChildren = Node2d | LineShape | PolyLineShape;
 interface BodyIntersection {
     other: PhysicsBody;
     intersections: IntersectingPixels[];
@@ -19,24 +18,23 @@ export class Scene extends Node2d {
     id = "scene";
     constantForce = new Point(Point.ZeroZero);
 
-    #bodyRegistry = new Set<PhysicsBody>();
+    physicsRegistry = new Set<PhysicsBody>();
 
-    // Wrap appendChild and removeChild to detect physics bodies
     appendChild(node: ValidChildren) {
         if (node instanceof PhysicsBody) {
-            this.#bodyRegistry.add(node);
+            this.physicsRegistry.add(node);
         }
         return super.appendChild(node);
     }
     removeChild(node: ValidChildren) {
         if (node instanceof PhysicsBody) {
-            this.#bodyRegistry.delete(node);
+            this.physicsRegistry.delete(node);
         }
         return super.removeChild(node);
     }
 
     process(delta: TickerDelta) {
-        const allBodies = Array.from(this.#bodyRegistry);
+        const allBodies = Array.from(this.physicsRegistry);
         const rigidBodies = allBodies.filter((b) => b instanceof RigidBody);
         rigidBodies.forEach((body) => {
             let initialPosition = body.precisePosition.clone();
@@ -59,10 +57,11 @@ export class Scene extends Node2d {
                 body.set(currentPosition);
 
                 // fast loose check
-                const nearbyBodies = allBodies.filter((other) => other !== body && doBodiesOverlap(body, other, COLLISION_HULL_THICKNESS));
+                // todo: multiple checks for fast-moving objects?
+                const nearbyBodies = allBodies.filter((other) => other !== body && doBodiesOverlap(body, other));
 
+                // shape check, laughably ineffecient
                 const intersectingBodies = nearbyBodies.reduce<BodyIntersection[]>((acc, other) => {
-                    // laughably ineffecient
                     const intersections = DrawBuffer.intersect(
                         { buffer: body.draw(), offset: body.originPosition },
                         { buffer: other.draw(), offset: other.originPosition }

@@ -1,6 +1,6 @@
 import { INPUT, DIRECTION_MAP } from "@/core/core-constants";
-import { Point } from "./primitives/point";
 import { EventEmitter } from "@/core/event-emitter";
+import { Point } from "@/core/geometry/point";
 import type { KeyMapLibrary, KeyStatus } from "@/core/types/input-types";
 
 // Map keyboard key codes to controller's state keys

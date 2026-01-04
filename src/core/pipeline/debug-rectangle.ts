@@ -1,4 +1,4 @@
-import { Point } from "@/core/primitives/point";
+import { Point } from "@/core/geometry/point";
 import { Text } from "@/core/primitives/text";
 
 export class DebugRectangle {

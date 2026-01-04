@@ -1,5 +1,5 @@
 import { Node2d } from "@/core/primitives/node-2d";
-import { Rectangle } from "@/core/primitives/rectangle";
+import { RectangleShape } from "@/core/primitives/rectangle-shape";
 import { PointLike, PointLikeFn, SpriteSheetOptions } from "@/core/types/primitive-types";
 import { chunk } from "lodash";
 
@@ -9,8 +9,8 @@ export class Sprite extends Node2d {
     height = 0;
     numFrames = 0;
     frames: string[] = [];
-    rect;
-    rotate?: number;
+    shape;
+    rotate = 0;
 
     constructor(point: PointLike | PointLikeFn, options: string | SpriteSheetOptions) {
         super();
@@ -36,7 +36,7 @@ export class Sprite extends Node2d {
         }
 
         this.set(point);
-        this.rect = new Rectangle(point, this.width, this.height);
+        this.shape = new RectangleShape(point, this.width, this.height);
     }
 
     #makeFrames(content: string) {
@@ -69,14 +69,18 @@ export class Sprite extends Node2d {
         this.index = value % this.numFrames;
     }
 
+    get dimensions() {
+        return this.shape.dimensions;
+    }
+
     get boundingBox() {
-        return this.rect.boundingBox;
+        return this.shape.boundingBox;
     }
 
     draw() {
         const currentIndex = Math.floor(this.index) % this.numFrames;
-        this.rect.background = { src: this.frames.at(currentIndex) ?? "error" };
-        this.rect.rotate = this.rotate;
-        return this.rect.draw();
+        this.shape.background = { src: this.frames.at(currentIndex) ?? "error" };
+        this.shape.rotate = this.rotate;
+        return this.shape.draw();
     }
 }

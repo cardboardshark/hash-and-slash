@@ -1,6 +1,6 @@
+import { Point } from "@/core/geometry/point";
+import { Rectangle } from "@/core/geometry/rectangle";
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-import { Point } from "@/core/primitives/point";
-import { Rectangle } from "@/core/primitives/rectangle";
 import { Text } from "@/core/primitives/text";
 import { Shader } from "@/core/shaders/shader";
 import { BackgroundOptions } from "@/core/types/primitive-types";

@@ -1,5 +1,5 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
-import { Rectangle } from "@/core/primitives/rectangle";
+import { Rectangle } from "@/core/geometry/rectangle";
 import { Pixel } from "@/core/types/canvas-types";
 import { BoundingBox, IntersectingPixels, PointLike } from "@/core/types/primitive-types";
 import { calculateBoundingBoxFromPoints, isPointInsideRectangle, rotateMatrix } from "@/core/utils/geometry-util";
@@ -110,6 +110,9 @@ export class DrawBuffer {
     }
 
     rotate(degree: number) {
+        if (degree === 0) {
+            return this;
+        }
         const pixels = rotateMatrix(Array.from(this.pixelMap.values()), degree);
         return new DrawBuffer(pixels);
     }

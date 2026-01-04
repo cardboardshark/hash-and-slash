@@ -1,8 +1,9 @@
 import { Node2d } from "@/core/primitives/node-2d";
 import { Canvas } from "./canvas";
 import type { KeyboardController } from "./keyboard-controller";
-import { Point } from "./primitives/point";
+
 import { Text } from "@/core/primitives/text";
+import { Point } from "@/core/geometry/point";
 
 const canvas = new Canvas({
     width: 20,

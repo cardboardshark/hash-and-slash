@@ -1,9 +1,9 @@
 import { Canvas } from "@/core/canvas";
 import { DIRECTION_MAP } from "@/core/core-constants";
 import { DisplayKeyboardInput } from "@/core/debug";
+import { Point } from "@/core/geometry/point";
+import { Rectangle } from "@/core/geometry/rectangle";
 import { KeyboardController } from "@/core/keyboard-controller";
-import { Point } from "@/core/primitives/point";
-import { Rectangle } from "@/core/primitives/rectangle";
 import { Scene } from "@/core/scene";
 import { Ticker } from "@/core/ticker";
 import { Ball } from "@/games/bounce/ball";

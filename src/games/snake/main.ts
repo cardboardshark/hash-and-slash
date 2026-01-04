@@ -1,10 +1,11 @@
 import { Canvas } from "@/core/canvas";
 import { DIRECTION_MAP } from "@/core/core-constants";
 import { DisplayKeyboardInput } from "@/core/debug";
+import { Point } from "@/core/geometry/point";
+import { Rectangle } from "@/core/geometry/rectangle";
 import { KeyboardController } from "@/core/keyboard-controller";
 import { Node2d } from "@/core/primitives/node-2d";
-import { Point } from "@/core/primitives/point";
-import { Rectangle } from "@/core/primitives/rectangle";
+import { RectangleShape } from "@/core/primitives/rectangle-shape";
 import { Sprite } from "@/core/primitives/sprite";
 import { Text } from "@/core/primitives/text";
 import { Scene } from "@/core/scene";
@@ -19,6 +20,7 @@ import { Wall } from "@/games/snake/wall";
 const ticker = new Ticker();
 const input = new KeyboardController();
 const scene = new Scene();
+scene.constantForce = DIRECTION_MAP.down.vector;
 
 const canvas = new Canvas({
     width: 30,
@@ -40,7 +42,8 @@ const player = new Player({ initialPosition: new Point(3, 3) });
 
 const liveArea = new Rectangle(new Point(1, 1), canvas.width - 1, canvas.height - 6);
 
-// scene.appendChild(new Wall(new Rectangle(new Point(8, 8), 10, 10)));
+const block = new Wall(new Rectangle(new Point(8, 8), 10, 10));
+scene.appendChild(block);
 scene.appendChild(new Wall(new Rectangle(new Point(0, 0), canvas.width, 1)));
 scene.appendChild(new Wall(new Rectangle(new Point(0, 0), 1, canvas.height - 6)));
 scene.appendChild(new Wall(new Rectangle(new Point(canvas.width - 1, 0), 1, canvas.height - 6)));
@@ -53,7 +56,7 @@ scene.appendChild(apple);
 /**
  * HUD
  */
-const scoreBox = new Rectangle(Point.ZeroZero, canvas.width, 5);
+const scoreBox = new RectangleShape(Point.ZeroZero, canvas.width, 5);
 scoreBox.background = { fill: "█" };
 
 const scoreText = new Text(new Point(scoreBox.position).add({ x: 1, y: 1 }), `\nMy score is: ${numApples}\n`, {
@@ -75,12 +78,12 @@ scene.appendChild(player);
 
 const pong = new Bouncy();
 pong.set(new Point(20, 10));
-pong.constantForce = DIRECTION_MAP.down.vector;
-pong.on("bodyEntered", ({ other }) => {
-    if (other instanceof Wall && pong.constantForce) {
-        pong.constantForce = pong.constantForce.rotate(180);
-    }
-});
+pong.linearVelocity = DIRECTION_MAP.right.vector;
+// pong.on("bodyEntered", ({ other }) => {
+//     if (other instanceof Wall && pong.constantForce) {
+//         pong.constantForce = pong.constantForce.rotate(180);
+//     }
+// });
 scene.appendChild(pong);
 
 /**
@@ -125,6 +128,9 @@ ticker.add((delta) => {
     if (input.isDeadStick() === false) {
         player.constantForce = input.cardinalVector.multiplyScalar(player.speed);
     }
+    if (input.keys.space.pressed) {
+        player.flap();
+    }
 
     player.process();
     scene.process(delta);
@@ -134,7 +140,7 @@ ticker.add((delta) => {
     if (isAlive === false) {
         skull.next(10 * delta.deltaTime);
         skullContainer.visible = true;
-        ticker.paused = true;
+        // ticker.paused = true;
     }
 
     canvas.draw(scene);

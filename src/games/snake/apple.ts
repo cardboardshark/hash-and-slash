@@ -1,6 +1,6 @@
+import { Point } from "@/core/geometry/point";
+import { Rectangle } from "@/core/geometry/rectangle";
 import { StaticBody } from "@/core/physics/static-body";
-import { Point } from "@/core/primitives/point";
-import { Rectangle } from "@/core/primitives/rectangle";
 import { Sprite } from "@/core/primitives/sprite";
 import { PointLike } from "@/core/types/primitive-types";
 import { AssetUtil } from "@/core/utils/asset-util";

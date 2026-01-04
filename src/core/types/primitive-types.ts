@@ -23,6 +23,11 @@ export interface BoundingBox {
     height: number;
 }
 
+export interface Dimensions {
+    width: number;
+    height: number;
+}
+
 export interface BackgroundOptions {
     src?: string | number;
     position?: string;

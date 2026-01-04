@@ -1,5 +1,5 @@
-import { Point } from "@/core/primitives/point";
-import { PolyLine } from "@/core/primitives/poly-line";
+import { Point } from "@/core/geometry/point";
+import { PolyLine } from "@/core/geometry/poly-line";
 import type { PointLike } from "@/core/types/primitive-types";
 import { calculateVectorBetweenPoints } from "@/core/utils/geometry-util";
 

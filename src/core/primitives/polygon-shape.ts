@@ -1,56 +1,18 @@
 import { BLANK_CHARACTER } from "@/core/core-constants";
+import { Polygon } from "@/core/geometry/polygon";
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-import { Line } from "@/core/primitives/line";
-import { Point } from "@/core/primitives/point";
-import { Shape } from "@/core/primitives/shape";
+import { Node2dGeometry } from "@/core/primitives/node-2d-geometry";
 import { Pixel } from "@/core/types/canvas-types";
-import { PointLike, BoundingBox } from "@/core/types/primitive-types";
-import { calculateBoundingBoxFromPoints } from "@/core/utils/geometry-util";
+import { PointLike } from "@/core/types/primitive-types";
 
-export class Polygon extends Shape {
-    points: PointLike[];
-    closed: true = true;
+export class PolygonShape extends Node2dGeometry {
+    shape: Polygon;
+
     fill = "p";
 
     constructor(points: PointLike[]) {
         super();
-
-        this.points = points;
-
-        const firstPoint = this.points[0];
-
-        if (firstPoint) {
-            this.set({ x: firstPoint.x, y: firstPoint.y });
-        }
-    }
-
-    get lines() {
-        const lines = [];
-
-        const isClosed = new Point(this.points[0]).equals(this.points[this.points.length - 1]);
-
-        const composedPoints = isClosed ? this.points : [...this.points, this.points[0]];
-        for (let i = 0; i <= composedPoints.length; i += 1) {
-            const nextPoint = composedPoints.at(i + 1);
-            if (nextPoint) {
-                lines.push(new Line(composedPoints[i], nextPoint));
-            }
-        }
-        return lines;
-    }
-
-    add(point: PointLike) {
-        if (this.last) {
-            this.lines.push(new Line(this.last, point));
-        }
-        this.points.push(point);
-    }
-
-    get last() {
-        if (this.points.length === 0) {
-            throw new Error("Polygon does not have any points.");
-        }
-        return this.points[this.points.length - 1];
+        this.shape = new Polygon(points);
     }
 
     draw() {
@@ -59,7 +21,7 @@ export class Polygon extends Shape {
             Array.from({ length: this.boundingBox.width }, () => BLANK_CHARACTER)
         );
 
-        const polygon = this.points.map((p) => {
+        const polygon = this.shape.points.map((p) => {
             return {
                 x: p.x,
                 y: p.y,
@@ -95,8 +57,8 @@ export class Polygon extends Shape {
         return new DrawBuffer(pixels);
     }
 
-    get boundingBox(): BoundingBox {
-        return calculateBoundingBoxFromPoints(this.points);
+    static from(shape: Polygon) {
+        return new PolygonShape(shape.points);
     }
 }
 

@@ -1,5 +1,5 @@
-import { Point } from "@/core/primitives/point";
-import { Rectangle } from "@/core/primitives/rectangle";
+import { Point } from "@/core/geometry/point";
+import { Rectangle } from "@/core/geometry/rectangle";
 import { BoundingBox, PointLike } from "@/core/types/primitive-types";
 import { parsePositionString } from "@/core/utils/string-util";
 
@@ -164,3 +164,26 @@ export function rotateMatrix<T extends PointLike>(points: T[], angle: number, pr
         return point;
     });
 }
+
+/**
+ * Calculates the reflected velocity vector for a bounce.
+ * @param {object} velocity - The incoming velocity vector {x, y}.
+ * @param {object} normal - The unit normal vector of the surface {x, y}.
+ * @returns {object} The new reflected velocity vector.
+ */
+function bounceVector(velocity: PointLike, normal: PointLike) {
+    // Calculate the dot product (v . n)
+    const dotProduct = velocity.x * normal.x + velocity.y * normal.y;
+
+    // Calculate the reflection: v' = v - 2 * (v . n) * n
+    const reflectedX = velocity.x - 2 * dotProduct * normal.x;
+    const reflectedY = velocity.y - 2 * dotProduct * normal.y;
+
+    return { x: reflectedX, y: reflectedY };
+}
+
+// Example usage:
+let ballVelocity = { x: 5, y: -3 };
+let surfaceNormal = { x: 0.707, y: 0.707 }; // Example unit normal for a 45-degree angled surface
+ballVelocity = bounceVector(ballVelocity, surfaceNormal);
+console.log("New Ball Velocity after Bounce:", ballVelocity);

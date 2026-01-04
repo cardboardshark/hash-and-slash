@@ -1,10 +1,7 @@
-import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-import { Line } from "@/core/primitives/line";
-import { Point } from "@/core/primitives/point";
-import { Pixel } from "@/core/types/canvas-types";
+import { Line } from "@/core/geometry/line";
+import { Point } from "@/core/geometry/point";
 import { PointLike } from "@/core/types/primitive-types";
 import { calculateBoundingBoxFromPoints, trimPointsToLength } from "@/core/utils/geometry-util";
-import { calculateDiagonalDistance, lerpPoint } from "@/core/utils/math-utils";
 
 export class PolyLine {
     points: Point[];
@@ -43,7 +40,7 @@ export class PolyLine {
 
     get last() {
         if (this.points.length === 0) {
-            throw new Error("Polygon does not have any points.");
+            throw new Error("Polyline does not have any points.");
         }
         return this.points[this.points.length - 1];
     }
@@ -60,29 +57,16 @@ export class PolyLine {
         return lines;
     }
 
-    get length() {
-        return this.lines.reduce((sum, l) => sum + l.length, 0);
-    }
-
-    draw() {
-        let pixels: Pixel[] = [];
-        this.lines.forEach((l) => {
-            const diagonalDistance = calculateDiagonalDistance(l.start, l.end);
-            for (let step = 0; step <= diagonalDistance; step++) {
-                const t = diagonalDistance === 0 ? 0.0 : step / diagonalDistance;
-                const { x, y } = lerpPoint(l.start, l.end, t);
-                pixels.push({
-                    x,
-                    y,
-                    value: String(this.fill).substring(0, 1),
-                });
-            }
-        });
-
-        return new DrawBuffer(pixels);
+    get dimensions() {
+        const box = calculateBoundingBoxFromPoints(this.points);
+        return { width: box.width, height: box.height };
     }
 
     get boundingBox() {
         return calculateBoundingBoxFromPoints(this.points);
+    }
+
+    get length() {
+        return this.lines.reduce((sum, l) => sum + l.length, 0);
     }
 }

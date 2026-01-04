@@ -1,8 +1,8 @@
 import { DrawBuffer } from "@/core/pipeline/draw-buffer";
-import { Point } from "@/core/primitives/point";
-import { Rectangle } from "@/core/primitives/rectangle";
 import { Node2d } from "@/core/primitives/node-2d";
 import { DebugRectangle } from "@/core/pipeline/debug-rectangle";
+import { Rectangle } from "@/core/geometry/rectangle";
+import { Point } from "@/core/geometry/point";
 
 interface CanvasOptions {
     width: number;

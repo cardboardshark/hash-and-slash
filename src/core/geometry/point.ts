@@ -1,4 +1,3 @@
-import { DrawBuffer } from "@/core/pipeline/draw-buffer";
 import { PointLike } from "@/core/types/primitive-types";
 import { inRange } from "lodash";
 
@@ -136,9 +135,5 @@ export class Point {
     project(vector: PointLike, magnitude: number) {
         const distance = new Point(vector).multiplyScalar(magnitude);
         return new Point(this).add(distance);
-    }
-
-    draw() {
-        return new DrawBuffer([{ x: this.x, y: this.y, value: "P" }]);
     }
 }

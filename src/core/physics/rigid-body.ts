@@ -1,5 +1,5 @@
+import { Point } from "@/core/geometry/point";
 import { PhysicsBody } from "@/core/physics/physic-body";
-import { Point } from "@/core/primitives/point";
 
 let previousId = -1;
 export class RigidBody extends PhysicsBody {
